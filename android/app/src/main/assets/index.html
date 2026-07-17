@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>ঘরখাতা — স্মার্ট খরচ ট্র্যাকার</title>
+<meta name="theme-color" content="#04382b" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --paper: #f6f3ec;
+  --card: #ffffff;
+  --ink: #1c2420;
+  --ink-soft: #5c6660;
+  --ink-faint: #98a29b;
+  --line: rgba(28,36,32,0.08);
+  --emerald: #0b8a5f;
+  --emerald-deep: #04382b;
+  --emerald-mid: #0a5c42;
+  --emerald-light: #ddf3e9;
+  --amber: #d98324;
+  --amber-light: #fdf1df;
+  --rose: #d43d51;
+  --rose-light: #fde7ea;
+  --sky: #0f74a8;
+  --font: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+  --shadow-sm: 0 1px 2px rgba(20,30,25,0.05), 0 3px 10px -2px rgba(20,30,25,0.07);
+  --shadow-md: 0 2px 6px rgba(20,30,25,0.06), 0 10px 28px -6px rgba(20,30,25,0.12);
+  --r-lg: 20px;
+  --r-md: 15px;
+}
+
+html, body {
+  font-family: var(--font);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+
+.paper-bg {
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(at 15% 0%, rgba(11,138,95,0.07) 0, transparent 45%),
+    radial-gradient(at 90% 8%, rgba(217,131,36,0.05) 0, transparent 40%);
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 999px; }
+
+/* ── Animations ── */
+@keyframes slideUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes pop { 0% { transform:scale(0.94); opacity:0; } 60% { transform:scale(1.015); } 100% { transform:scale(1); opacity:1; } }
+@keyframes slideFromLeft { from { transform:translateX(-100%); } to { transform:translateX(0); } }
+@keyframes slideFromBottom { from { transform:translateY(100%); } to { transform:translateY(0); } }
+@keyframes growBar { from { width: 0; } }
+@keyframes riseBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.anim-slide-up { animation: slideUp .35s cubic-bezier(.22,.9,.32,1) both; }
+.anim-fade-in { animation: fadeIn .22s ease-out both; }
+.anim-pop { animation: pop .35s cubic-bezier(.22,.9,.32,1) both; }
+.anim-slide-left { animation: slideFromLeft .3s cubic-bezier(.22,.9,.32,1) both; }
+.anim-sheet { animation: slideFromBottom .32s cubic-bezier(.22,.9,.32,1) both; }
+
+/* ── Layout ── */
+#app { max-width: 448px; margin: 0 auto; min-height: 100vh; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Top Bar ── */
+#topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(246,243,236,0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px 12px;
+}
+.topbar-row1 { display: flex; align-items: center; justify-content: space-between; }
+.topbar-logo { display: flex; align-items: center; gap: 9px; }
+.logo-mark {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: linear-gradient(140deg, var(--emerald), var(--emerald-deep));
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: 0 3px 10px rgba(11,138,95,0.35);
+}
+.topbar-logo h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; color: var(--emerald-deep); line-height: 1; }
+.topbar-logo p { font-size: 10px; color: var(--ink-faint); font-weight: 500; line-height: 1.2; }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 13px; border: 1px solid var(--line);
+  background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft); box-shadow: var(--shadow-sm); transition: transform .12s;
+}
+.icon-btn:active { transform: scale(0.92); }
+
+.month-nav {
+  margin-top: 12px; display: flex; align-items: center; justify-content: space-between;
+  background: var(--card); border-radius: 15px; padding: 5px;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+}
+.month-nav-btn {
+  width: 34px; height: 34px; border-radius: 11px; border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint); transition: background .15s, transform .1s;
+}
+.month-nav-btn:hover { background: rgba(0,0,0,0.045); color: var(--ink-soft); }
+.month-nav-btn:active { transform: scale(0.88); }
+.month-label-btn {
+  display: flex; align-items: center; gap: 8px; border: none; background: transparent;
+  cursor: pointer; padding: 6px 12px; border-radius: 11px; transition: background .15s;
+  font-family: var(--font);
+}
+.month-label-btn:hover { background: rgba(0,0,0,0.04); }
+.month-label-btn > span:first-child { font-size: 14px; font-weight: 700; color: var(--ink); }
+.badge-current {
+  background: var(--emerald-light); color: var(--emerald-mid);
+  font-size: 10px; font-weight: 700; border-radius: 99px; padding: 2px 9px;
+}
+
+/* ── Hero Summary ── */
+#summary { padding: 14px 16px 4px; }
+.hero-card {
+  position: relative; overflow: hidden; border-radius: 24px; color: #fff;
+  background: linear-gradient(150deg, #0c6b4a 0%, var(--emerald-deep) 78%);
+  padding: 20px 20px 16px;
+  box-shadow: 0 10px 32px -8px rgba(4,56,43,0.45);
+}
+.hero-deco1 { position: absolute; right: -46px; top: -46px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255,255,255,0.06); }
+.hero-deco2 { position: absolute; right: 24px; bottom: -60px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.045); }
+.hero-top { position: relative; display: flex; align-items: flex-start; justify-content: space-between; }
+.hero-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.72); }
+.hero-balance { font-size: 34px; font-weight: 700; letter-spacing: -1px; margin-top: 2px; line-height: 1.15; }
+.hero-count {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85); font-size: 10.5px; font-weight: 600;
+  border-radius: 99px; padding: 4px 11px;
+}
+.hero-progress-wrap { position: relative; margin-top: 14px; }
+.hero-progress-bar { height: 7px; border-radius: 99px; background: rgba(255,255,255,0.16); overflow: hidden; }
+.hero-progress-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, #f3b95a, var(--amber));
+  transition: width .5s cubic-bezier(.22,.9,.32,1);
+}
+.hero-progress-note { font-size: 10.5px; color: rgba(255,255,255,0.6); margin-top: 5px; }
+.hero-stats { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.hero-stat {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 15px; padding: 10px 12px;
+}
+.hero-stat-icon {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-stat-icon.up { background: rgba(134,239,172,0.18); color: #86efac; }
+.hero-stat-icon.down { background: rgba(253,164,175,0.16); color: #fda4af; }
+.hero-stat p:first-child { font-size: 10.5px; color: rgba(255,255,255,0.65); }
+.hero-stat p:last-child { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+
+/* ── Section heading ── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 10px;
+}
+.section-head h2 { font-size: 14px; font-weight: 700; color: var(--ink); }
+.section-head span { font-size: 11px; color: var(--ink-faint); font-weight: 500; }
+
+/* ── Category List ── */
+#cat-list-section { position: relative; padding: 0 16px 122px; }
+.cat-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.cat-item {
+  width: 100%; display: flex; align-items: center; gap: 13px;
+  background: var(--card); border-radius: var(--r-lg); padding: 13px 14px;
+  cursor: pointer; border: 1px solid var(--line); text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: transform .12s, box-shadow .15s;
+  font-family: var(--font);
+}
+.cat-item:hover { box-shadow: var(--shadow-md); }
+.cat-item:active { transform: scale(0.975); }
+.cat-icon-wrap {
+  width: 46px; height: 46px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cat-info { flex: 1; min-width: 0; }
+.cat-info h3 { font-size: 15px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-info .cat-sub { font-size: 11.5px; color: var(--ink-faint); margin-top: 1px; }
+.cat-mini-bar { height: 4px; border-radius: 99px; background: rgba(0,0,0,0.06); overflow: hidden; margin-top: 7px; width: 100%; }
+.cat-mini-fill { height: 100%; border-radius: 99px; animation: growBar .6s cubic-bezier(.22,.9,.32,1) both; }
+.cat-right { text-align: right; flex-shrink: 0; }
+.cat-amount { font-size: 14.5px; font-weight: 700; letter-spacing: -0.2px; }
+.cat-pct { font-size: 10px; color: var(--ink-faint); margin-top: 2px; }
+
+/* ── Bottom Nav ── */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 448px; padding: 0 14px 14px; z-index: 30;
+  pointer-events: none;
+}
+.bottom-nav-inner {
+  pointer-events: auto;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.92); border-radius: 22px; padding: 7px 18px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  box-shadow: 0 -2px 24px rgba(20,30,25,0.10), 0 2px 6px rgba(20,30,25,0.05);
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  flex: 1; padding: 7px; border-radius: 13px; border: none; background: transparent;
+  cursor: pointer; transition: transform .1s; color: var(--ink-faint); font-family: var(--font);
+}
+.nav-btn.active { color: var(--emerald-mid); }
+.nav-btn:active { transform: scale(0.92); }
+.nav-btn span { font-size: 10px; font-weight: 700; }
+.fab {
+  width: 56px; height: 56px; border-radius: 19px; border: none;
+  background: linear-gradient(140deg, #10a873, var(--emerald-deep));
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: -30px;
+  box-shadow: 0 6px 18px rgba(11,138,95,0.45), 0 0 0 5px var(--paper);
+  transition: transform .12s;
+}
+.fab:active { transform: scale(0.9) rotate(90deg); }
+
+/* ── Category Detail ── */
+#cat-detail { min-height: 100vh; }
+.cat-detail-header { position: relative; overflow: hidden; padding: 16px 16px 22px; color: #fff; border-radius: 0 0 28px 28px; }
+.cat-deco1 { position: absolute; right: -36px; top: -36px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.09); }
+.cat-deco2 { position: absolute; left: -20px; bottom: -40px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.06); }
+.cat-detail-nav { position: relative; display: flex; align-items: center; justify-content: space-between; }
+.cat-detail-nav h2 { font-size: 16px; font-weight: 700; }
+.back-btn {
+  width: 38px; height: 38px; border-radius: 13px; border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.14); color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: transform .1s;
+}
+.back-btn:active { transform: scale(0.9); }
+.cat-detail-month-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 10px; padding: 5px 10px; font-size: 11px; font-weight: 600;
+}
+.cat-summary-card {
+  position: relative; margin-top: 18px; border-radius: 19px;
+  background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.2);
+  padding: 16px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.cat-summary-inner { display: flex; align-items: center; gap: 13px; }
+.cat-summary-icon {
+  width: 50px; height: 50px; border-radius: 15px;
+  background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: #fff;
+}
+.cat-summary-info { flex: 1; }
+.cat-summary-info p:first-child { font-size: 12px; color: rgba(255,255,255,0.75); }
+.cat-summary-info p:last-child { font-size: 26px; font-weight: 700; letter-spacing: -0.8px; }
+.cat-summary-right { text-align: right; font-size: 11px; color: rgba(255,255,255,0.8); }
+.cat-body { padding: 18px 16px 122px; }
+
+/* Transaction list */
+.tx-date-group { margin-bottom: 18px; }
+.tx-date-header { display: flex; align-items: center; justify-content: space-between; padding: 0 5px; margin-bottom: 7px; }
+.tx-date-left { display: flex; align-items: center; gap: 8px; }
+.tx-date-dot { width: 7px; height: 7px; border-radius: 50%; }
+.tx-date-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.tx-date-total { font-size: 11px; font-weight: 600; color: var(--ink-faint); }
+.tx-card { background: var(--card); border-radius: 17px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.tx-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
+.tx-row:last-child { border-bottom: none; }
+.tx-icon { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-title { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.status-badge { border-radius: 6px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+.status-baki { background: var(--rose-light); color: #b32638; }
+.status-pending { background: var(--amber-light); color: #9a5b12; }
+.status-paid { background: var(--emerald-light); color: var(--emerald-mid); }
+.tx-note { font-size: 10.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-amount { font-size: 14px; font-weight: 700; flex-shrink: 0; letter-spacing: -0.2px; }
+.tx-options-btn {
+  width: 30px; height: 30px; border-radius: 9px; border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: rgba(0,0,0,0.18); transition: background .1s, color .1s; flex-shrink: 0;
+}
+.tx-options-btn:hover { background: rgba(0,0,0,0.05); color: var(--ink-soft); }
+.tx-delete-overlay {
+  position: absolute; top: 0; bottom: 0; right: 0;
+  display: flex; align-items: center; gap: 6px; padding: 0 12px;
+  background: linear-gradient(90deg, transparent, #fff4f4 22%, #fff4f4);
+  animation: fadeIn .15s ease-out;
+}
+.btn-delete {
+  background: var(--rose); color: #fff; border: none; border-radius: 9px;
+  padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font);
+  transition: transform .1s;
+}
+.btn-delete:active { transform: scale(0.92); }
+.btn-cancel {
+  background: #fff; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 9px;
+  padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font);
+}
+.add-dashed-btn {
+  width: 100%; border: 2px dashed; border-radius: 16px; padding: 13px;
+  background: transparent; cursor: pointer; font-size: 14px; font-weight: 700;
+  font-family: var(--font); transition: transform .1s, background .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.add-dashed-btn:active { transform: scale(0.98); }
+.add-dashed-btn:hover { background: rgba(0,0,0,0.02); }
+
+/* Empty state */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--card); border-radius: var(--r-lg); padding: 42px 24px; text-align: center;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+}
+.empty-icon { width: 68px; height: 68px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+.empty-state h3 { margin-top: 16px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.empty-state p { margin-top: 4px; font-size: 13.5px; color: var(--ink-faint); }
+.empty-add-btn {
+  margin-top: 18px; border-radius: 13px; padding: 11px 24px;
+  font-size: 14px; font-weight: 700; color: #fff; border: none; cursor: pointer;
+  font-family: var(--font); transition: transform .1s; box-shadow: var(--shadow-sm);
+}
+.empty-add-btn:active { transform: scale(0.94); }
+
+/* ── Todo ── */
+.todo-input-row {
+  display: flex; gap: 8px; background: var(--card); border-radius: 16px; padding: 8px;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm); margin-bottom: 18px;
+}
+.todo-input {
+  flex: 1; border-radius: 11px; background: var(--amber-light); padding: 11px 13px;
+  font-size: 14px; border: 1px solid rgba(217,131,36,0.25); outline: none; font-family: var(--font);
+  color: var(--ink); transition: border-color .15s, box-shadow .15s; min-width: 0;
+}
+.todo-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(217,131,36,0.14); }
+.todo-input::placeholder { color: var(--ink-faint); }
+.todo-add-btn {
+  background: var(--amber); color: #fff; border: none; border-radius: 11px;
+  padding: 11px 18px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: var(--font);
+  transition: transform .1s, opacity .15s; flex-shrink: 0;
+}
+.todo-add-btn:disabled { background: #d8d3c8; cursor: not-allowed; }
+.todo-add-btn:active:not(:disabled) { transform: scale(0.92); }
+.todo-section-label { font-size: 12px; font-weight: 700; padding: 0 5px; margin-bottom: 7px; }
+.todo-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow-sm); margin-bottom: 18px; }
+.todo-row { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+.todo-row:last-child { border-bottom: none; }
+.todo-check {
+  width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(0,0,0,0.16);
+  background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s, border-color .15s, transform .1s;
+}
+.todo-check:active { transform: scale(0.85); }
+.todo-check.done { background: var(--emerald); border-color: var(--emerald); }
+.todo-check svg { display: none; }
+.todo-check.done svg { display: block; }
+.todo-title { flex: 1; font-size: 14px; font-weight: 500; color: var(--ink); }
+.todo-title.done { color: var(--ink-faint); text-decoration: line-through; }
+.todo-del-btn {
+  width: 30px; height: 30px; border-radius: 9px; border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: rgba(0,0,0,0.18); transition: background .1s, color .1s;
+}
+.todo-del-btn:hover { background: var(--rose-light); color: var(--rose); }
+
+/* Progress */
+.progress-row { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.progress-bar { height: 6px; width: 66px; background: rgba(255,255,255,0.22); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: #fff; border-radius: 99px; transition: width .3s; }
+
+/* ── Reports ── */
+#reports-page { padding: 14px 16px 122px; display: flex; flex-direction: column; gap: 14px; }
+.reports-hero {
+  position: relative; overflow: hidden; border-radius: 24px;
+  background: linear-gradient(150deg, #0c6b4a, var(--emerald-deep));
+  padding: 20px; color: #fff;
+  box-shadow: 0 10px 32px -8px rgba(4,56,43,0.45);
+}
+.reports-hero-deco { position: absolute; right: -28px; top: -28px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.07); }
+.reports-hero > p:first-of-type { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.72); position: relative; }
+.reports-hero-amount { font-size: 34px; font-weight: 700; letter-spacing: -1px; position: relative; margin: 2px 0; }
+.reports-hero-sub { font-size: 11.5px; color: rgba(255,255,255,0.66); position: relative; }
+.reports-hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; position: relative; }
+.reports-hero-card {
+  background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 15px; padding: 12px 14px;
+}
+.reports-hero-card p:first-child { font-size: 10.5px; color: rgba(255,255,255,0.65); }
+.reports-hero-card p:last-child { font-size: 17px; font-weight: 700; margin-top: 2px; letter-spacing: -0.3px; }
+.report-section {
+  background: var(--card); border-radius: var(--r-lg); padding: 17px;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+}
+.report-section h3 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
+.report-section h3 svg { color: var(--emerald); }
+
+/* Donut */
+.donut-wrap { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+.donut-box { position: relative; width: 116px; height: 116px; flex-shrink: 0; }
+.donut-box svg { transform: rotate(-90deg); }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.donut-center p:first-child { font-size: 9.5px; color: var(--ink-faint); }
+.donut-center p:last-child { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+.donut-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.legend-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; }
+.legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.legend-name { color: var(--ink-soft); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.legend-pct { color: var(--ink-faint); font-weight: 600; }
+
+.cat-breakdown-row { width: 100%; background: transparent; border: none; text-align: left; cursor: pointer; margin-bottom: 13px; font-family: var(--font); padding: 0; }
+.cat-breakdown-row:last-child { margin-bottom: 0; }
+.cat-breakdown-inner { display: flex; align-items: center; gap: 12px; }
+.cat-breakdown-icon { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cat-breakdown-label { flex: 1; min-width: 0; }
+.cat-breakdown-top { display: flex; align-items: center; justify-content: space-between; }
+.cat-breakdown-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.cat-breakdown-amount { font-size: 13.5px; font-weight: 700; }
+.cat-breakdown-bar-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+.cat-breakdown-bar { height: 6px; flex: 1; background: rgba(0,0,0,0.06); border-radius: 99px; overflow: hidden; }
+.cat-breakdown-bar-fill { height: 100%; border-radius: 99px; animation: growBar .7s cubic-bezier(.22,.9,.32,1) both; }
+.cat-breakdown-pct { font-size: 10px; font-weight: 600; color: var(--ink-faint); width: 30px; text-align: right; }
+
+/* Daily chart */
+.daily-chart { height: 124px; display: flex; align-items: flex-end; gap: 2px; }
+.daily-bar-wrap { flex: 1; min-width: 5px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; cursor: default; }
+.daily-bar { width: 100%; border-radius: 3px 3px 1px 1px; transform-origin: bottom; animation: riseBar .5s cubic-bezier(.22,.9,.32,1) both; }
+.daily-bar-tooltip {
+  position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; font-size: 10px; white-space: nowrap;
+  padding: 4px 9px; border-radius: 7px; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 5;
+}
+.daily-bar-wrap:hover .daily-bar-tooltip { opacity: 1; }
+.daily-chart-labels { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--ink-faint); margin-top: 6px; font-weight: 500; }
+
+/* Top expenses */
+.top-spend-row { display: flex; align-items: center; gap: 11px; background: var(--paper); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--line); }
+.top-spend-row:last-child { margin-bottom: 0; }
+.top-rank {
+  width: 28px; height: 28px; border-radius: 9px; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--ink-soft);
+  border: 1px solid var(--line); flex-shrink: 0;
+}
+.top-rank.gold { background: #fdf3dd; color: #a8720e; border-color: rgba(217,131,36,0.35); }
+.top-spend-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.top-spend-info { flex: 1; min-width: 0; }
+.top-spend-title { font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-spend-cat { font-size: 10.5px; color: var(--ink-faint); }
+.top-spend-amount { font-size: 13.5px; font-weight: 700; flex-shrink: 0; }
+
+/* Tip card */
+.tip-card {
+  background: linear-gradient(140deg, #fdf6e7, #fdf1df);
+  border: 1px solid rgba(217,131,36,0.22);
+  border-radius: var(--r-lg); padding: 16px; display: flex; gap: 13px; align-items: flex-start;
+}
+.tip-icon {
+  width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+  background: rgba(217,131,36,0.14); color: var(--amber);
+  display: flex; align-items: center; justify-content: center;
+}
+.tip-body p:first-child { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.tip-body p:last-child { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; line-height: 1.55; }
+
+/* ── Add Modal ── */
+#add-modal-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: none; align-items: flex-end; justify-content: center;
+  background: rgba(15,25,20,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+#add-modal-overlay.open { display: flex; animation: fadeIn .2s ease-out; }
+#add-modal {
+  position: relative; width: 100%; max-width: 448px;
+  background: var(--paper); border-radius: 28px 28px 0 0; padding: 14px 18px 30px;
+  box-shadow: 0 -10px 44px rgba(0,0,0,0.2);
+  max-height: 92vh; overflow-y: auto;
+}
+.modal-handle { width: 42px; height: 4.5px; background: rgba(0,0,0,0.14); border-radius: 99px; margin: 0 auto 14px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-header h3 { font-size: 18px; font-weight: 700; color: var(--ink); }
+.modal-close {
+  width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,0.06);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-soft); transition: background .15s;
+}
+.modal-close:hover { background: rgba(0,0,0,0.1); }
+.mode-toggle { display: flex; gap: 5px; background: #fff; border-radius: 15px; padding: 5px; border: 1px solid var(--line); margin-bottom: 18px; }
+.mode-btn {
+  flex: 1; border: none; border-radius: 11px; padding: 9px; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); transition: background .15s, color .15s;
+  color: var(--ink-faint); background: transparent;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.mode-btn.active-tx { background: var(--emerald); color: #fff; box-shadow: 0 3px 8px rgba(11,138,95,0.3); }
+.mode-btn.active-todo { background: var(--amber); color: #fff; box-shadow: 0 3px 8px rgba(217,131,36,0.3); }
+.field-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 7px; display: block; }
+.field-input {
+  width: 100%; border-radius: 14px; background: #fff; padding: 12px 15px;
+  font-size: 14px; border: 1px solid var(--line); outline: none; font-family: var(--font);
+  color: var(--ink); transition: border-color .15s, box-shadow .15s;
+}
+.field-input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(11,138,95,0.13); }
+.field-input::placeholder { color: var(--ink-faint); }
+.amount-wrap {
+  display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 14px;
+  padding: 8px 15px; border: 1px solid var(--line); transition: border-color .15s, box-shadow .15s;
+}
+.amount-wrap:focus-within { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(11,138,95,0.13); }
+.amount-currency { font-size: 21px; font-weight: 700; }
+.amount-input {
+  flex: 1; background: transparent; border: none; outline: none; font-size: 23px; font-weight: 700;
+  color: var(--ink); font-family: var(--font); width: 0;
+}
+.amount-input::-webkit-outer-spin-button, .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.amount-preview { background: var(--emerald-light); color: var(--emerald-mid); font-size: 11px; font-weight: 700; border-radius: 99px; padding: 3px 10px; white-space: nowrap; }
+.cat-chips-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.cat-chips-scroll::-webkit-scrollbar { display: none; }
+.cat-chip {
+  flex-shrink: 0; display: flex; align-items: center; gap: 7px; border-radius: 13px; padding: 9px 13px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; border: 1px solid var(--line); font-family: var(--font);
+  background: #fff; color: var(--ink-soft); transition: transform .1s, box-shadow .15s;
+}
+.cat-chip:active { transform: scale(0.94); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.save-btn {
+  width: 100%; border-radius: 15px; padding: 15px; font-size: 15px; font-weight: 700;
+  color: #fff; border: none; cursor: pointer; font-family: var(--font);
+  background: linear-gradient(140deg, #10a873, var(--emerald-deep));
+  box-shadow: 0 5px 16px rgba(11,138,95,0.35);
+  transition: transform .1s, opacity .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.save-btn:active:not(:disabled) { transform: scale(0.98); }
+.save-btn:disabled { background: #cfcabf; box-shadow: none; opacity: 0.7; cursor: not-allowed; }
+
+/* ── Menu Drawer ── */
+#menu-overlay { position: fixed; inset: 0; z-index: 50; display: none; }
+#menu-overlay.open { display: block; animation: fadeIn .2s ease-out; }
+#menu-backdrop { position: absolute; inset: 0; background: rgba(15,25,20,0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+#menu-drawer {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 82%; max-width: 310px;
+  background: var(--paper); box-shadow: 6px 0 44px rgba(0,0,0,0.22);
+  display: flex; flex-direction: column;
+}
+.menu-header {
+  background: linear-gradient(150deg, #0c6b4a, var(--emerald-deep));
+  padding: 36px 20px 22px; color: #fff;
+  display: flex; align-items: center; gap: 13px;
+  position: relative; overflow: hidden;
+}
+.menu-header::after { content: ''; position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.07); }
+.menu-logo-icon {
+  width: 50px; height: 50px; border-radius: 16px;
+  background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.24);
+  display: flex; align-items: center; justify-content: center; color: #fff; position: relative;
+}
+.menu-header h2 { font-size: 22px; font-weight: 700; }
+.menu-header p { font-size: 11px; color: rgba(255,255,255,0.68); }
+.menu-items { padding: 12px; flex: 1; }
+.menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; border: none;
+  background: transparent; cursor: pointer; padding: 11px 12px; border-radius: 15px;
+  text-align: left; font-family: var(--font); transition: background .15s; margin-bottom: 2px;
+}
+.menu-item:hover { background: rgba(255,255,255,0.75); }
+.menu-item-icon {
+  width: 38px; height: 38px; border-radius: 12px; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); flex-shrink: 0; color: var(--emerald-mid);
+}
+.menu-item.danger .menu-item-icon { color: var(--rose); }
+.menu-item-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+.menu-item.danger .menu-item-label { color: var(--rose); }
+.menu-item-sub { font-size: 10.5px; color: var(--ink-faint); }
+.menu-divider { height: 1px; background: rgba(0,0,0,0.07); margin: 10px 4px; }
+.menu-footer { padding: 16px 20px 20px; text-align: center; font-size: 10.5px; color: var(--ink-faint); line-height: 1.7; }
+
+/* ── Utilities ── */
+.hidden { display: none !important; }
+button { font-family: var(--font); }
+input, select { font-family: var(--font); }
+select {
+  width: 100%; border-radius: 14px; background: #fff; padding: 12px 15px;
+  font-size: 14px; border: 1px solid var(--line); outline: none; color: var(--ink);
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6660' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 13px center; background-size: 16px;
+  transition: border-color .15s;
+}
+select:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(11,138,95,0.13); }
+input[type="date"] {
+  width: 100%; border-radius: 14px; background: #fff; padding: 11px 15px;
+  font-size: 14px; border: 1px solid var(--line); outline: none; color: var(--ink);
+}
+input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(11,138,95,0.13); }
+.mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 13px; } .mb-4 { margin-bottom: 18px; }
+
+@media (min-width: 640px) {
+  #add-modal { border-radius: 28px; margin: 16px; width: calc(100% - 32px); }
+  #add-modal-overlay { align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="paper-bg">
+  <div id="app">
+
+    <!-- ══════════ TOP BAR ══════════ -->
+    <header id="topbar">
+      <div class="topbar-row1">
+        <button class="icon-btn" id="menu-open-btn" aria-label="মেনু খুলুন">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        </button>
+        <div class="topbar-logo">
+          <div class="logo-mark">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+          </div>
+          <div>
+            <h1>ঘরখাতা</h1>
+            <p>স্মার্ট খরচ ট্র্যাকার</p>
+          </div>
+        </div>
+        <div style="width:40px"></div>
+      </div>
+      <div class="month-nav">
+        <button class="month-nav-btn" id="prev-month-btn" aria-label="আগের মাস">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+        <button class="month-label-btn" id="today-btn" title="আজকের মাসে ফিরুন">
+          <span id="month-label-text"></span>
+          <span id="current-month-badge" class="badge-current hidden">চলমান</span>
+        </button>
+        <button class="month-nav-btn" id="next-month-btn" aria-label="পরের মাস">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ══════════ HOME ══════════ -->
+    <div id="home-page" class="page active">
+      <section id="summary">
+        <div class="hero-card anim-pop">
+          <div class="hero-deco1"></div>
+          <div class="hero-deco2"></div>
+          <div class="hero-top">
+            <div>
+              <p class="hero-label">এই মাসের ব্যালেন্স</p>
+              <p class="hero-balance" id="s-balance">৳০</p>
+            </div>
+            <span class="hero-count" id="tx-count-badge">০টি লেনদেন</span>
+          </div>
+          <div class="hero-progress-wrap">
+            <div class="hero-progress-bar"><div class="hero-progress-fill" id="hero-progress" style="width:0%"></div></div>
+            <p class="hero-progress-note" id="hero-progress-note">আয়ের ০% খরচ হয়েছে</p>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-icon up">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+              </div>
+              <div><p>মোট আয়</p><p id="s-income">৳০</p></div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-icon down">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+              </div>
+              <div><p>মোট খরচ</p><p id="s-expense">৳০</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-head">
+        <h2>খাতাসমূহ</h2>
+        <span>বিস্তারিত দেখতে চাপুন</span>
+      </div>
+      <section id="cat-list-section">
+        <ul class="cat-list" id="cat-list"></ul>
+      </section>
+    </div>
+
+    <!-- ══════════ REPORTS ══════════ -->
+    <div id="reports-page" class="page hidden"></div>
+
+    <!-- ══════════ CATEGORY DETAIL ══════════ -->
+    <div id="cat-detail-page" class="page hidden">
+      <div id="cat-detail">
+        <header class="cat-detail-header" id="cat-detail-header">
+          <div class="cat-deco1"></div>
+          <div class="cat-deco2"></div>
+          <div class="cat-detail-nav">
+            <button class="back-btn" id="back-btn" aria-label="ফিরে যান">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+            </button>
+            <h2 id="cat-detail-title"></h2>
+            <div class="cat-detail-month-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              <span id="cat-detail-month"></span>
+            </div>
+          </div>
+          <div class="cat-summary-card anim-pop">
+            <div class="cat-summary-inner">
+              <div class="cat-summary-icon" id="cat-detail-icon-wrap"></div>
+              <div class="cat-summary-info">
+                <p id="cat-summary-label">মোট খরচ</p>
+                <p id="cat-summary-amount">৳০</p>
+              </div>
+              <div class="cat-summary-right" id="cat-summary-right"></div>
+            </div>
+          </div>
+        </header>
+        <main class="cat-body" id="cat-body"></main>
+      </div>
+    </div>
+
+    <!-- ══════════ BOTTOM NAV ══════════ -->
+    <nav id="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-btn active" id="nav-home" onclick="setView('home')">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+          <span>হোম</span>
+        </button>
+        <button class="fab" id="fab-btn" aria-label="নতুন যোগ করুন">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="nav-btn" id="nav-reports" onclick="setView('reports')">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>রিপোর্ট</span>
+        </button>
+      </div>
+    </nav>
+
+  </div>
+</div>
+
+<!-- ══════════ ADD MODAL ══════════ -->
+<div id="add-modal-overlay" onclick="closeAddModal(event)">
+  <div id="add-modal" class="anim-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3 id="modal-title">নতুন লেনদেন</h3>
+      <button class="modal-close" onclick="closeAddModal()" aria-label="বন্ধ করুন">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active-tx" id="mode-tx-btn" onclick="setMode('tx')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        লেনদেন
+      </button>
+      <button class="mode-btn" id="mode-todo-btn" onclick="setMode('todo')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        টাস্ক
+      </button>
+    </div>
+
+    <div class="mb-4" id="cat-chips-wrap">
+      <label class="field-label">খাতা বেছে নিন</label>
+      <div class="cat-chips-scroll" id="cat-chips"></div>
+    </div>
+
+    <div class="mb-3">
+      <label class="field-label" id="title-label" for="modal-title-input">বিবরণ</label>
+      <input type="text" class="field-input" id="modal-title-input" placeholder="যেমন: বাজার করলাম" />
+    </div>
+
+    <div class="mb-3" id="amount-wrap-outer">
+      <label class="field-label" for="modal-amount">পরিমাণ</label>
+      <div class="amount-wrap" id="amount-wrap-inner">
+        <span class="amount-currency" id="amount-currency">৳</span>
+        <input type="number" inputmode="decimal" class="amount-input" id="modal-amount" placeholder="০" />
+        <span class="amount-preview hidden" id="amount-preview"></span>
+      </div>
+    </div>
+
+    <div class="two-col mb-4" id="date-status-row">
+      <div>
+        <label class="field-label" for="modal-date">তারিখ</label>
+        <input type="date" id="modal-date" />
+      </div>
+      <div id="status-or-note">
+        <label class="field-label" id="status-note-label">নোট (ঐচ্ছিক)</label>
+        <input type="text" class="field-input" id="modal-note" placeholder="মন্তব্য..." />
+      </div>
+    </div>
+
+    <button class="save-btn" id="save-btn" disabled onclick="handleSave()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>
+      সংরক্ষণ করুন
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ MENU DRAWER ══════════ -->
+<div id="menu-overlay" onclick="closeMenu(event)">
+  <div id="menu-backdrop"></div>
+  <div id="menu-drawer" class="anim-slide-left" onclick="event.stopPropagation()">
+    <div class="menu-header">
+      <div class="menu-logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+      </div>
+      <div>
+        <h2>ঘরখাতা</h2>
+        <p>স্মার্ট খরচ ট্র্যাকার</p>
+      </div>
+    </div>
+    <div class="menu-items">
+      <button class="menu-item" onclick="menuNavigate('home')">
+        <div class="menu-item-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        </div>
+        <div><p class="menu-item-label">হোম</p><p class="menu-item-sub">প্রধান ড্যাশবোর্ড</p></div>
+      </button>
+      <button class="menu-item" onclick="menuNavigate('reports')">
+        <div class="menu-item-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <div><p class="menu-item-label">রিপোর্ট</p><p class="menu-item-sub">খরচ বিশ্লেষণ</p></div>
+      </button>
+      <div class="menu-divider"></div>
+      <button class="menu-item danger" onclick="handleClearAll()">
+        <div class="menu-item-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </div>
+        <div><p class="menu-item-label">সব ডেটা মুছুন</p><p class="menu-item-sub">রিসেট করুন</p></div>
+      </button>
+    </div>
+    <div class="menu-footer">
+      সব তথ্য আপনার ডিভাইসে সংরক্ষিত<br/>কোনো ডেটা আপলোড হয় না
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// ICONS (SVG helpers)
+// ══════════════════════════════════
+const ICON_PATHS = {
+  wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+  basket: '<path d="m15 11-1-9"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M4.5 15.5h15"/><path d="m5 11 4-7"/><path d="m9 11 1-9"/>',
+  store: '<path d="M2 7v3a2 2 0 0 0 2 2 2.7 2.7 0 0 0 1.6-.5.9.9 0 0 1 1 0 2.7 2.7 0 0 0 3.2 0 .9.9 0 0 1 1 0 2.7 2.7 0 0 0 3.2 0 .9.9 0 0 1 1 0 2.7 2.7 0 0 0 3.2 0 .9.9 0 0 1 1 0A2.7 2.7 0 0 0 20 12a2 2 0 0 0 2-2V7l-2-4H4Z"/><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/><path d="M9 21v-5h6v5"/>',
+  receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+  gradcap: '<path d="M21.42 10.92a1 1 0 0 0 0-1.84l-8.6-3.91a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0Z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+  pill: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  check: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5A7 7 0 1 0 5 9c0 1 .5 2.5 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  pie: '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+  bars: '<path d="M18 20V10M12 20V4M6 20v-6"/>',
+  fire: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+};
+function icon(name, size, sw) {
+  return '<svg width="'+(size||18)+'" height="'+(size||18)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'" stroke-linecap="round" stroke-linejoin="round">'+ICON_PATHS[name]+'</svg>';
+}
+
+// ══════════════════════════════════
+// DATA & HELPERS
+// ══════════════════════════════════
+const BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+function bn(n) { return String(n).replace(/\d/g, d => BN_DIGITS[parseInt(d)]); }
+function bnTaka(n) {
+  const abs = Math.abs(Math.round(n * 100) / 100);
+  const sign = n < 0 ? '−' : '';
+  return sign + '৳' + bn(abs.toLocaleString('en-IN'));
+}
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function monthKey(iso) { return iso.slice(0, 7); }
+function monthLabel(key) {
+  const parts = key.split('-');
+  return BN_MONTHS[parseInt(parts[1]) - 1] + ' ' + bn(parts[0]);
+}
+function shiftMonthKey(month, delta) {
+  const parts = month.split('-').map(Number);
+  const d = new Date(parts[0], parts[1] - 1 + delta, 1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function formatBnDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return bn(d.getDate()) + ' ' + BN_MONTHS[d.getMonth()];
+}
+function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+const CATEGORIES = [
+  { id:'income',  name:'আয়',            color:'#0b8a5f', bgLight:'#ddf3e9', icon:'wallet',  type:'income'  },
+  { id:'bazar',   name:'বাজার সদাই',     color:'#d96a1a', bgLight:'#fcecdd', icon:'basket',  type:'expense' },
+  { id:'dues',    name:'দোকান বাকি',     color:'#d43d51', bgLight:'#fde7ea', icon:'store',   type:'dues'    },
+  { id:'monthly', name:'মাসিক বিল',      color:'#2467c9', bgLight:'#e2ecfb', icon:'receipt', type:'expense' },
+  { id:'madrasa', name:'মাদ্রাসা খরচ',    color:'#7649c9', bgLight:'#ede6fa', icon:'gradcap', type:'expense' },
+  { id:'medical', name:'ওষুধ / মেডিকেল', color:'#0f86a8', bgLight:'#def3f8', icon:'pill',    type:'expense' },
+  { id:'charity', name:'দান-সদকা',       color:'#0d9276', bgLight:'#dcf2ec', icon:'heart',   type:'expense' },
+  { id:'todo',    name:'ট��ডু লিস্ট',      color:'#a8720e', bgLight:'#fdf3dd', icon:'check',   type:'todo'    },
+];
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[0]; }
+
+// Storage
+const K_TX = 'ghorkhata:tx:v3';
+const K_TD = 'ghorkhata:td:v3';
+function loadTx() {
+  try { const r = localStorage.getItem(K_TX); if (r) return JSON.parse(r); } catch (e) {}
+  return makeSampleTx();
+}
+function saveTx(list) { localStorage.setItem(K_TX, JSON.stringify(list)); }
+function loadTd() {
+  try { const r = localStorage.getItem(K_TD); if (r) return JSON.parse(r); } catch (e) {}
+  return makeSampleTodos();
+}
+function saveTd(list) { localStorage.setItem(K_TD, JSON.stringify(list)); }
+
+function makeSampleTx() {
+  const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
+  const d = day => y + '-' + String(m + 1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+  return [
+    { id: uid(), categoryId: 'income',  title: 'বেতন/মাইনে',    amount: 35000, date: d(1) },
+    { id: uid(), categoryId: 'income',  title: 'ব্যবসার আয়',    amount: 5000,  date: d(3) },
+    { id: uid(), categoryId: 'income',  title: 'বিকাশে পাওয়া',  amount: 3000,  date: d(8) },
+    { id: uid(), categoryId: 'income',  title: 'নগদে পাওয়া',    amount: 1000,  date: d(12) },
+    { id: uid(), categoryId: 'income',  title: 'অন্যান্য আয়',   amount: 1000,  date: d(15) },
+    { id: uid(), categoryId: 'bazar',   title: 'চাল',           amount: 420,   date: d(5) },
+    { id: uid(), categoryId: 'bazar',   title: 'ডাল',           amount: 160,   date: d(5) },
+    { id: uid(), categoryId: 'bazar',   title: 'আলু',           amount: 120,   date: d(5) },
+    { id: uid(), categoryId: 'bazar',   title: 'তেল',           amount: 180,   date: d(9) },
+    { id: uid(), categoryId: 'bazar',   title: 'মাছ',           amount: 350,   date: d(9) },
+    { id: uid(), categoryId: 'bazar',   title: 'সবজি',          amount: 120,   date: d(14) },
+    { id: uid(), categoryId: 'bazar',   title: 'পেঁয়াজ',        amount: 60,    date: d(14) },
+    { id: uid(), categoryId: 'monthly', title: 'বিদ্যুৎ বিল',    amount: 1200,  date: d(15), status: 'baki' },
+    { id: uid(), categoryId: 'monthly', title: 'গ্যাস বিল',      amount: 950,   date: d(20), status: 'baki' },
+    { id: uid(), categoryId: 'monthly', title: 'ওয়াইফাই বিল',   amount: 800,   date: d(10), status: 'paid' },
+    { id: uid(), categoryId: 'monthly', title: 'পানি বিল',       amount: 450,   date: d(15), status: 'paid' },
+    { id: uid(), categoryId: 'monthly', title: 'বাসা ভাড়া',     amount: 8000,  date: d(5),  status: 'paid' },
+    { id: uid(), categoryId: 'madrasa', title: 'মাসিক বেতন',    amount: 2000,  date: d(3),  status: 'paid' },
+    { id: uid(), categoryId: 'madrasa', title: 'পরীক্ষা ফি',     amount: 300,   date: d(15) },
+    { id: uid(), categoryId: 'madrasa', title: 'বই খরচ',         amount: 450,   date: d(10), status: 'baki' },
+    { id: uid(), categoryId: 'madrasa', title: 'সেশন ফি',        amount: 350,   date: d(10), status: 'baki' },
+    { id: uid(), categoryId: 'madrasa', title: 'অন্যান্য খরচ',   amount: 200,   date: d(10), status: 'baki' },
+    { id: uid(), categoryId: 'medical', title: 'প্যারাসিটামল',   amount: 50,    date: d(10) },
+    { id: uid(), categoryId: 'medical', title: 'স্যালাইন',       amount: 120,   date: d(12) },
+    { id: uid(), categoryId: 'medical', title: 'জ্বরের ওষুধ',    amount: 60,    date: d(12) },
+    { id: uid(), categoryId: 'medical', title: 'ডাক্তারের ফি',   amount: 400,   date: d(14) },
+    { id: uid(), categoryId: 'medical', title: 'ভিটামিন',        amount: 150,   date: d(15) },
+    { id: uid(), categoryId: 'dues',    title: 'রহমান স্টোর',    amount: 450,   date: d(2),  status: 'baki' },
+    { id: uid(), categoryId: 'dues',    title: 'মুদি দোকান',     amount: 980,   date: d(7),  status: 'baki' },
+    { id: uid(), categoryId: 'dues',    title: 'সুমন স্টোর',     amount: 200,   date: d(9),  status: 'paid' },
+    { id: uid(), categoryId: 'dues',    title: 'আলম স্টোর',      amount: 350,   date: d(11), status: 'paid' },
+    { id: uid(), categoryId: 'charity', title: 'মসজিদে দান',     amount: 200,   date: d(5) },
+    { id: uid(), categoryId: 'charity', title: 'ফিতরা',          amount: 700,   date: d(10) },
+    { id: uid(), categoryId: 'charity', title: 'গরীবকে সাহায্য', amount: 300,   date: d(20) },
+    { id: uid(), categoryId: 'charity', title: 'সদকা',           amount: 150,   date: d(15) },
+  ];
+}
+function makeSampleTodos() {
+  return [
+    { id: uid(), title: 'গ্যাস বিল দিতে হবে',       done: false, createdAt: todayISO() },
+    { id: uid(), title: 'কিরানা বাজার করতে হবে',    done: true,  createdAt: todayISO() },
+    { id: uid(), title: 'মাদ্রাসার বেতন দিতে হবে',  done: false, createdAt: todayISO() },
+    { id: uid(), title: 'ওষুধ আনতে হবে',            done: false, createdAt: todayISO() },
+    { id: uid(), title: 'বই কিনতে হবে',              done: false, createdAt: todayISO() },
+  ];
+}
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let transactions = loadTx();
+let todos = loadTd();
+let currentMonth = monthKey(todayISO());
+let currentView = 'home'; // 'home' | 'reports' | 'detail'
+let openCatId = null;
+let swipedTxId = null;
+
+let modalMode = 'tx'; // 'tx' | 'todo'
+let modalCatId = 'bazar';
+
+// ══════════════════════════════════
+// COMPUTED
+// ══════════════════════════════════
+function getMonthTxs() { return transactions.filter(t => monthKey(t.date) === currentMonth); }
+function getIncome(txs) { return txs.filter(t => t.categoryId === 'income').reduce((s, t) => s + t.amount, 0); }
+function getExpense(txs) { return txs.filter(t => t.categoryId !== 'income' && t.categoryId !== 'todo').reduce((s, t) => s + t.amount, 0); }
+
+// ══════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════
+function setView(v) {
+  currentView = v;
+  openCatId = null;
+  toggle('home-page', v === 'home');
+  toggle('reports-page', v === 'reports');
+  toggle('cat-detail-page', false);
+  document.getElementById('nav-home').classList.toggle('active', v === 'home');
+  document.getElementById('nav-reports').classList.toggle('active', v === 'reports');
+  document.getElementById('topbar').classList.remove('hidden');
+  window.scrollTo({ top: 0 });
+  if (v === 'home') renderHome();
+  if (v === 'reports') renderReports();
+}
+function toggle(id, show) {
+  const el = document.getElementById(id);
+  el.classList.toggle('active', show);
+  el.classList.toggle('hidden', !show);
+}
+function openCatDetail(catId) {
+  openCatId = catId;
+  currentView = 'detail';
+  toggle('home-page', false);
+  toggle('reports-page', false);
+  toggle('cat-detail-page', true);
+  document.getElementById('topbar').classList.add('hidden');
+  window.scrollTo({ top: 0 });
+  renderCatDetail(catId);
+}
+document.getElementById('back-btn').addEventListener('click', () => setView('home'));
+
+// ══════════════════════════════════
+// MONTH NAV
+// ══════════════════════════════════
+function updateMonthUI() {
+  document.getElementById('month-label-text').textContent = monthLabel(currentMonth);
+  document.getElementById('current-month-badge').classList.toggle('hidden', monthKey(todayISO()) !== currentMonth);
+}
+document.getElementById('prev-month-btn').addEventListener('click', () => { currentMonth = shiftMonthKey(currentMonth, -1); updateMonthUI(); rerender(); });
+document.getElementById('next-month-btn').addEventListener('click', () => { currentMonth = shiftMonthKey(currentMonth, 1); updateMonthUI(); rerender(); });
+document.getElementById('today-btn').addEventListener('click', () => { currentMonth = monthKey(todayISO()); updateMonthUI(); rerender(); });
+function rerender() {
+  if (currentView === 'home') renderHome();
+  else if (currentView === 'reports') renderReports();
+  else if (currentView === 'detail' && openCatId) renderCatDetail(openCatId);
+}
+
+// ══════════════════════════════════
+// RENDER HOME
+// ══════════════════════════════════
+function renderHome() {
+  const txs = getMonthTxs();
+  const income = getIncome(txs);
+  const expense = getExpense(txs);
+  const balance = income - expense;
+
+  document.getElementById('s-income').textContent = bnTaka(income);
+  document.getElementById('s-expense').textContent = bnTaka(expense);
+  document.getElementById('s-balance').textContent = bnTaka(balance);
+  document.getElementById('tx-count-badge').textContent = bn(txs.length) + 'টি লেনদেন';
+
+  const pct = income > 0 ? Math.min((expense / income) * 100, 100) : (expense > 0 ? 100 : 0);
+  document.getElementById('hero-progress').style.width = pct + '%';
+  document.getElementById('hero-progress-note').textContent =
+    income > 0 ? 'আয়ের ' + bn(Math.round(pct)) + '% খরচ হয়েছে' : 'এই মাসে এখনো কোনো আয় যোগ হয়নি';
+
+  const list = document.getElementById('cat-list');
+  list.innerHTML = '';
+  CATEGORIES.forEach((cat, idx) => {
+    const items = txs.filter(t => t.categoryId === cat.id);
+    const total = items.reduce((s, t) => s + t.amount, 0);
+    const isTodo = cat.id === 'todo';
+    const pendingTodos = isTodo ? todos.filter(t => !t.done).length : 0;
+    const doneTodos = isTodo ? todos.filter(t => t.done).length : 0;
+    const isExpenseCat = cat.type === 'expense' || cat.type === 'dues';
+    const share = isExpenseCat && expense > 0 ? (total / expense) * 100 : 0;
+
+    const li = document.createElement('li');
+    li.className = 'anim-slide-up';
+    li.style.animationDelay = (idx * 45) + 'ms';
+
+    let sub, right;
+    if (isTodo) {
+      sub = bn(pendingTodos) + 'টি বাকি · ' + bn(doneTodos) + 'টি সম্পন্ন';
+      right = '<p class="cat-amount" style="color:' + cat.color + '">' + bn(todos.length) + 'টি</p>';
+    } else {
+      sub = bn(items.length) + 'টি লেনদেন';
+      right = '<p class="cat-amount" style="color:' + cat.color + '">' + bnTaka(total) + '</p>' +
+        (isExpenseCat && total > 0 ? '<p class="cat-pct">মোট খরচের ' + bn(Math.round(share)) + '%</p>' : '');
+    }
+
+    li.innerHTML =
+      '<button class="cat-item" onclick="openCatDetail(\'' + cat.id + '\')">' +
+        '<div class="cat-icon-wrap" style="background:' + cat.bgLight + ';color:' + cat.color + '">' + icon(cat.icon, 21) + '</div>' +
+        '<div class="cat-info">' +
+          '<h3>' + cat.name + '</h3>' +
+          '<p class="cat-sub">' + sub + '</p>' +
+          (isExpenseCat && total > 0
+            ? '<div class="cat-mini-bar"><div class="cat-mini-fill" style="width:' + Math.min(share, 100) + '%;background:' + cat.color + '"></div></div>'
+            : '') +
+        '</div>' +
+        '<div class="cat-right">' + right + '</div>' +
+      '</button>';
+    list.appendChild(li);
+  });
+}
+
+// ══════════════════════════════════
+// RENDER REPORTS
+// ══════════════════════════════════
+function renderReports() {
+  const txs = getMonthTxs();
+  const income = getIncome(txs);
+  const expense = getExpense(txs);
+  const balance = income - expense;
+
+  const breakdown = CATEGORIES
+    .filter(c => c.type === 'expense' || c.type === 'dues')
+    .map(c => ({ cat: c, total: txs.filter(t => t.categoryId === c.id).reduce((s, t) => s + t.amount, 0) }))
+    .filter(b => b.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const maxBar = Math.max.apply(null, breakdown.map(b => b.total).concat([1]));
+
+  // Donut segments
+  const R = 44, CIRC = 2 * Math.PI * R;
+  let offset = 0;
+  const donutSegs = breakdown.map(b => {
+    const frac = expense > 0 ? b.total / expense : 0;
+    const seg = '<circle cx="58" cy="58" r="' + R + '" fill="none" stroke="' + b.cat.color + '" stroke-width="13" stroke-dasharray="' + (frac * CIRC - 2) + ' ' + (CIRC - frac * CIRC + 2) + '" stroke-dashoffset="' + (-offset * CIRC) + '" stroke-linecap="butt"/>';
+    offset += frac;
+    return seg;
+  }).join('');
+
+  // Daily chart
+  const y = parseInt(currentMonth.split('-')[0]);
+  const mo = parseInt(currentMonth.split('-')[1]);
+  const daysInMonth = new Date(y, mo, 0).getDate();
+  const daily = [];
+  for (let i = 1; i <= daysInMonth; i++) {
+    const key = currentMonth + '-' + String(i).padStart(2, '0');
+    const exp = txs.filter(t => t.date === key && t.categoryId !== 'income' && t.categoryId !== 'todo').reduce((s, t) => s + t.amount, 0);
+    daily.push({ day: i, expense: exp });
+  }
+  const maxD = Math.max.apply(null, daily.map(d => d.expense).concat([1]));
+
+  const topSpends = txs
+    .filter(t => t.categoryId !== 'income' && t.categoryId !== 'todo')
+    .slice().sort((a, b) => b.amount - a.amount).slice(0, 5);
+
+  let tip;
+  if (breakdown.length > 0) {
+    tip = breakdown[0].cat.name + ' খাতে সবচেয়ে বেশি খরচ (' + bnTaka(breakdown[0].total) + ')। এই খাতে সচেতন থাকুন।';
+  } else {
+    tip = 'নিয়মিত হিসাব রাখলে মাস শেষে সাশ্রয় বেশি হয়।';
+  }
+
+  let html =
+    '<div class="reports-hero anim-pop">' +
+      '<div class="reports-hero-deco"></div>' +
+      '<p>নিট ব্যালেন্স · ' + monthLabel(currentMonth) + '</p>' +
+      '<p class="reports-hero-amount">' + bnTaka(balance) + '</p>' +
+      '<p class="reports-hero-sub">' + (balance >= 0 ? 'সাশ্রয়ে আছেন, চালিয়ে যান' : 'সাবধান, খরচ আয়ের চেয়ে বেশি হচ্ছে') + '</p>' +
+      '<div class="reports-hero-grid">' +
+        '<div class="reports-hero-card"><p>মোট আয়</p><p>' + bnTaka(income) + '</p></div>' +
+        '<div class="reports-hero-card"><p>মোট খরচ</p><p>' + bnTaka(expense) + '</p></div>' +
+      '</div>' +
+    '</div>';
+
+  if (breakdown.length > 0) {
+    html += '<div class="report-section anim-slide-up">' +
+      '<h3>' + icon('pie', 16, 2.2) + 'খাতা অনুযায়ী খরচ</h3>' +
+      '<div class="donut-wrap">' +
+        '<div class="donut-box">' +
+          '<svg width="116" height="116" viewBox="0 0 116 116">' +
+            '<circle cx="58" cy="58" r="' + R + '" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="13"/>' +
+            donutSegs +
+          '</svg>' +
+          '<div class="donut-center"><p>মোট খরচ</p><p>' + bnTaka(expense) + '</p></div>' +
+        '</div>' +
+        '<div class="donut-legend">' +
+          breakdown.slice(0, 5).map(b =>
+            '<div class="legend-row">' +
+              '<span class="legend-dot" style="background:' + b.cat.color + '"></span>' +
+              '<span class="legend-name">' + b.cat.name + '</span>' +
+              '<span class="legend-pct">' + bn(Math.round((b.total / expense) * 100)) + '%</span>' +
+            '</div>').join('') +
+        '</div>' +
+      '</div>' +
+      breakdown.map(b => {
+        const pct = expense > 0 ? (b.total / expense) * 100 : 0;
+        return '<button class="cat-breakdown-row" onclick="openCatDetail(\'' + b.cat.id + '\')">' +
+          '<div class="cat-breakdown-inner">' +
+            '<div class="cat-breakdown-icon" style="background:' + b.cat.bgLight + ';color:' + b.cat.color + '">' + icon(b.cat.icon, 17) + '</div>' +
+            '<div class="cat-breakdown-label">' +
+              '<div class="cat-breakdown-top">' +
+                '<span class="cat-breakdown-name">' + b.cat.name + '</span>' +
+                '<span class="cat-breakdown-amount" style="color:' + b.cat.color + '">' + bnTaka(b.total) + '</span>' +
+              '</div>' +
+              '<div class="cat-breakdown-bar-row">' +
+                '<div class="cat-breakdown-bar"><div class="cat-breakdown-bar-fill" style="width:' + (b.total / maxBar) * 100 + '%;background:' + b.cat.color + '"></div></div>' +
+                '<span class="cat-breakdown-pct">' + bn(Math.round(pct)) + '%</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</button>';
+      }).join('') +
+    '</div>';
+  }
+
+  html += '<div class="report-section anim-slide-up" style="animation-delay:60ms">' +
+    '<h3>' + icon('bars', 16, 2.2) + 'দৈনিক খরচ</h3>' +
+    '<div class="daily-chart">' +
+      daily.map((d, i) =>
+        '<div class="daily-bar-wrap">' +
+          '<div class="daily-bar-tooltip">' + bn(d.day) + ' তারিখ: ' + bnTaka(d.expense) + '</div>' +
+          '<div class="daily-bar" style="height:' + (d.expense > 0 ? Math.max((d.expense / maxD) * 100, 5) : 2) + '%;background:' + (d.expense > 0 ? 'var(--emerald)' : 'rgba(0,0,0,0.05)') + ';animation-delay:' + (i * 12) + 'ms"></div>' +
+        '</div>').join('') +
+    '</div>' +
+    '<div class="daily-chart-labels"><span>' + bn(1) + '</span><span>' + bn(Math.ceil(daysInMonth / 2)) + '</span><span>' + bn(daysInMonth) + '</span></div>' +
+  '</div>';
+
+  if (topSpends.length > 0) {
+    html += '<div class="report-section anim-slide-up" style="animation-delay:120ms">' +
+      '<h3>' + icon('fire', 16, 2.2) + 'সর্বোচ্চ খরচ</h3>' +
+      topSpends.map((t, i) => {
+        const c = getCat(t.categoryId);
+        return '<div class="top-spend-row">' +
+          '<div class="top-rank' + (i === 0 ? ' gold' : '') + '">' + bn(i + 1) + '</div>' +
+          '<div class="top-spend-icon" style="background:' + c.bgLight + ';color:' + c.color + '">' + icon(c.icon, 15) + '</div>' +
+          '<div class="top-spend-info">' +
+            '<p class="top-spend-title">' + esc(t.title) + '</p>' +
+            '<p class="top-spend-cat">' + c.name + '</p>' +
+          '</div>' +
+          '<p class="top-spend-amount" style="color:' + c.color + '">' + bnTaka(t.amount) + '</p>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
+  html += '<div class="tip-card anim-slide-up" style="animation-delay:180ms">' +
+    '<div class="tip-icon">' + icon('bulb', 19, 2.2) + '</div>' +
+    '<div class="tip-body"><p>পরামর্শ</p><p>' + tip + '</p></div>' +
+  '</div>';
+
+  document.getElementById('reports-page').innerHTML = html;
+}
+
+// ══════════════════════════════════
+// RENDER CATEGORY DETAIL
+// ══════════════════════════════════
+function renderCatDetail(catId) {
+  const cat = getCat(catId);
+  const isTodo = catId === 'todo';
+  swipedTxId = null;
+
+  const hdr = document.getElementById('cat-detail-header');
+  hdr.style.background = 'linear-gradient(150deg, ' + cat.color + ', ' + shade(cat.color, -35) + ')';
+  document.getElementById('cat-detail-title').textContent = cat.name;
+  document.getElementById('cat-detail-month').textContent = monthLabel(currentMonth);
+  document.getElementById('cat-detail-icon-wrap').innerHTML = icon(cat.icon, 24);
+
+  const monthTxs = transactions.filter(t => t.categoryId === catId && monthKey(t.date) === currentMonth);
+  const total = monthTxs.reduce((s, t) => s + t.amount, 0);
+
+  document.getElementById('cat-summary-label').textContent = isTodo ? 'মোট টাস্ক' : (cat.type === 'income' ? 'মোট আয়' : 'মোট খরচ');
+  document.getElementById('cat-summary-amount').textContent = isTodo ? bn(todos.length) + 'টি' : bnTaka(total);
+
+  const right = document.getElementById('cat-summary-right');
+  if (isTodo) {
+    const done = todos.filter(t => t.done).length;
+    right.innerHTML = '<div class="progress-row">' +
+      '<div class="progress-bar"><div class="progress-fill" style="width:' + (todos.length ? (done / todos.length) * 100 : 0) + '%"></div></div>' +
+      '<span style="font-size:12px;color:rgba(255,255,255,0.9)">' + bn(done) + '/' + bn(todos.length) + '</span></div>';
+  } else {
+    right.innerHTML = '<p>' + bn(monthTxs.length) + 'টি লেনদেন</p>';
+  }
+
+  const body = document.getElementById('cat-body');
+  if (isTodo) {
+    body.innerHTML = renderTodoSection();
+    bindTodoEvents();
+  } else {
+    body.innerHTML = renderTxSection(monthTxs, cat);
+  }
+}
+
+// Darken a hex color by pct (-100..100)
+function shade(hex, pct) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = 1 + pct / 100;
+  const r = Math.min(255, Math.max(0, Math.round(((n >> 16) & 255) * f)));
+  const g = Math.min(255, Math.max(0, Math.round(((n >> 8) & 255) * f)));
+  const b = Math.min(255, Math.max(0, Math.round((n & 255) * f)));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function renderTxSection(txs, cat) {
+  if (txs.length === 0) {
+    return '<div class="empty-state anim-fade-in">' +
+      '<div class="empty-icon" style="background:' + cat.bgLight + ';color:' + cat.color + '">' + icon(cat.icon, 30) + '</div>' +
+      '<h3>কোনো লেনদেন নেই</h3>' +
+      '<p>এই মাসে ' + cat.name + '-এ কিছু যোগ করুন</p>' +
+      '<button class="empty-add-btn" style="background:' + cat.color + '" onclick="openAddModal(\'' + cat.id + '\')">＋ যোগ করুন</button>' +
+    '</div>';
+  }
+
+  const grouped = new Map();
+  txs.slice().sort((a, b) => b.date > a.date ? 1 : -1).forEach(t => {
+    if (!grouped.has(t.date)) grouped.set(t.date, []);
+    grouped.get(t.date).push(t);
+  });
+
+  let html = '<div>';
+  let gi = 0;
+  grouped.forEach((list, date) => {
+    html += '<div class="tx-date-group anim-slide-up" style="animation-delay:' + (gi++ * 50) + 'ms">' +
+      '<div class="tx-date-header">' +
+        '<div class="tx-date-left">' +
+          '<div class="tx-date-dot" style="background:' + cat.color + '"></div>' +
+          '<span class="tx-date-label">' + formatBnDate(date) + '</span>' +
+        '</div>' +
+        '<span class="tx-date-total">' + bnTaka(list.reduce((s, t) => s + t.amount, 0)) + '</span>' +
+      '</div>' +
+      '<div class="tx-card">';
+    list.forEach(t => {
+      const statusHtml =
+        t.status === 'baki' ? '<span class="status-badge status-baki">বাকি</span>' :
+        t.status === 'pending' ? '<span class="status-badge status-pending">অপেক্ষমান</span>' :
+        t.status === 'paid' ? '<span class="status-badge status-paid">পরিশোধিত</span>' : '';
+      const noteHtml = t.note ? '<p class="tx-note">' + esc(t.note) + '</p>' : '';
+      html += '<div class="tx-row" id="tx-row-' + t.id + '">' +
+        '<div class="tx-icon" style="background:' + cat.bgLight + ';color:' + cat.color + '">' + icon(cat.icon, 16) + '</div>' +
+        '<div class="tx-info">' +
+          '<p class="tx-title">' + esc(t.title) + '</p>' +
+          '<div class="tx-meta">' + statusHtml + noteHtml + '</div>' +
+        '</div>' +
+        '<p class="tx-amount" style="color:' + cat.color + '">' + bnTaka(t.amount) + '</p>' +
+        '<button class="tx-options-btn" aria-label="অপশন" onclick="toggleTxSwipe(\'' + t.id + '\')">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg>' +
+        '</button>' +
+        '<div class="tx-delete-overlay hidden" id="tx-del-' + t.id + '">' +
+          '<button class="btn-delete" onclick="deleteTx(\'' + t.id + '\')">মুছুন</button>' +
+          '<button class="btn-cancel" onclick="toggleTxSwipe(\'' + t.id + '\')">না</button>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<button class="add-dashed-btn" style="border-color:' + cat.color + '55;color:' + cat.color + '" onclick="openAddModal(\'' + cat.id + '\')">＋ নতুন যোগ করুন</button>';
+  html += '</div>';
+  return html;
+}
+
+function toggleTxSwipe(id) {
+  if (swipedTxId && swipedTxId !== id) {
+    const prev = document.getElementById('tx-del-' + swipedTxId);
+    if (prev) prev.classList.add('hidden');
+  }
+  swipedTxId = swipedTxId === id ? null : id;
+  const el = document.getElementById('tx-del-' + id);
+  if (el) el.classList.toggle('hidden', swipedTxId !== id);
+}
+
+function deleteTx(id) {
+  transactions = transactions.filter(t => t.id !== id);
+  saveTx(transactions);
+  swipedTxId = null;
+  if (currentView === 'detail' && openCatId) renderCatDetail(openCatId);
+}
+
+// ══════════════════════════════════
+// TODO SECTION
+// ══════════════════════════════════
+function renderTodoSection() {
+  const pending = todos.filter(t => !t.done);
+  const done = todos.filter(t => t.done);
+
+  let html = '<div>' +
+    '<div class="todo-input-row">' +
+      '<input type="text" class="todo-input" id="todo-input" placeholder="নতুন টাস্ক লিখুন..." />' +
+      '<button class="todo-add-btn" id="todo-add-btn" disabled onclick="addTodo()">যোগ</button>' +
+    '</div>';
+
+  const rowHtml = t =>
+    '<div class="todo-row">' +
+      '<button class="todo-check' + (t.done ? ' done' : '') + '" aria-label="টাস্ক সম্পন্ন করুন" onclick="toggleTodo(\'' + t.id + '\')">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>' +
+      '</button>' +
+      '<p class="todo-title' + (t.done ? ' done' : '') + '">' + esc(t.title) + '</p>' +
+      '<button class="todo-del-btn" aria-label="টাস্ক মুছুন" onclick="deleteTodo(\'' + t.id + '\')">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+      '</button>' +
+    '</div>';
+
+  if (pending.length > 0) {
+    html += '<p class="todo-section-label" style="color:var(--ink-soft)">অপেক্ষমান (' + bn(pending.length) + 'টি)</p>' +
+      '<div class="todo-card anim-slide-up">' + pending.map(rowHtml).join('') + '</div>';
+  }
+  if (done.length > 0) {
+    html += '<p class="todo-section-label" style="color:var(--ink-faint)">সম্পন্ন (' + bn(done.length) + 'টি)</p>' +
+      '<div class="todo-card anim-slide-up" style="opacity:0.85">' + done.map(rowHtml).join('') + '</div>';
+  }
+  if (todos.length === 0) {
+    html += '<div class="empty-state anim-fade-in">' +
+      '<div class="empty-icon" style="background:var(--amber-light);color:var(--amber)">' + icon('check', 30) + '</div>' +
+      '<h3>কোনো টাস্ক নেই</h3>' +
+      '<p>উপরে টাইপ করে নতুন টাস্ক যোগ করুন</p>' +
+    '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function bindTodoEvents() {
+  const inp = document.getElementById('todo-input');
+  const btn = document.getElementById('todo-add-btn');
+  if (!inp || !btn) return;
+  inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+  inp.addEventListener('keydown', e => {
+    if (e.nativeEvent && e.nativeEvent.isComposing) return;
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter' && inp.value.trim()) addTodo();
+  });
+}
+
+function addTodo() {
+  const inp = document.getElementById('todo-input');
+  if (!inp || !inp.value.trim()) return;
+  todos = [{ id: uid(), title: inp.value.trim(), done: false, createdAt: todayISO() }].concat(todos);
+  saveTd(todos);
+  renderCatDetail('todo');
+  setTimeout(() => { const el = document.getElementById('todo-input'); if (el) el.focus(); }, 50);
+}
+function toggleTodo(id) {
+  todos = todos.map(t => t.id === id ? Object.assign({}, t, { done: !t.done }) : t);
+  saveTd(todos);
+  renderCatDetail('todo');
+}
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  saveTd(todos);
+  renderCatDetail('todo');
+}
+
+// ══════════════════════════════════
+// ADD MODAL
+// ══════════════════════════════════
+function openAddModal(defaultCat) {
+  modalMode = defaultCat === 'todo' ? 'todo' : 'tx';
+  modalCatId = (defaultCat && defaultCat !== 'todo') ? defaultCat : 'bazar';
+
+  resetModalFields();
+  renderModalCatChips();
+  updateModalUI();
+
+  const overlay = document.getElementById('add-modal-overlay');
+  const modal = document.getElementById('add-modal');
+  overlay.classList.add('open');
+  modal.classList.remove('anim-sheet');
+  void modal.offsetWidth;
+  modal.classList.add('anim-sheet');
+  setTimeout(() => document.getElementById('modal-title-input').focus(), 320);
+}
+
+function closeAddModal(e) {
+  if (e && e.target !== document.getElementById('add-modal-overlay')) return;
+  document.getElementById('add-modal-overlay').classList.remove('open');
+}
+
+function resetModalFields() {
+  document.getElementById('modal-title-input').value = '';
+  document.getElementById('modal-amount').value = '';
+  document.getElementById('modal-date').value = todayISO();
+  const noteEl = document.getElementById('modal-note');
+  if (noteEl) noteEl.value = '';
+  document.getElementById('amount-preview').classList.add('hidden');
+}
+
+function setMode(m) { modalMode = m; updateModalUI(); }
+
+function updateModalUI() {
+  const isTodo = modalMode === 'todo';
+  document.getElementById('modal-title').textContent = isTodo ? 'নতুন টাস্ক' : 'নতুন লেনদেন';
+  document.getElementById('mode-tx-btn').className = 'mode-btn' + (modalMode === 'tx' ? ' active-tx' : '');
+  document.getElementById('mode-todo-btn').className = 'mode-btn' + (modalMode === 'todo' ? ' active-todo' : '');
+  document.getElementById('cat-chips-wrap').classList.toggle('hidden', isTodo);
+  document.getElementById('amount-wrap-outer').classList.toggle('hidden', isTodo);
+  document.getElementById('date-status-row').classList.toggle('hidden', isTodo);
+  document.getElementById('title-label').textContent = isTodo ? 'কী করতে হবে?' : 'বিবরণ';
+  document.getElementById('modal-title-input').placeholder = isTodo ? 'যেমন: গ্যাস বিল দিতে হবে' : 'যেমন: বাজার করলাম';
+
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.style.background = isTodo ? 'linear-gradient(140deg, #e59a3d, #a8720e)' : '';
+  saveBtn.style.boxShadow = isTodo ? '0 5px 16px rgba(217,131,36,0.35)' : '';
+
+  if (!isTodo) {
+    const cat = getCat(modalCatId);
+    document.getElementById('amount-currency').style.color = cat.color;
+    const showStatus = cat.type === 'dues' || modalCatId === 'monthly' || modalCatId === 'madrasa';
+    const snContainer = document.getElementById('status-or-note');
+    if (showStatus) {
+      snContainer.innerHTML = '<label class="field-label" for="modal-status">অবস্থা</label>' +
+        '<select id="modal-status">' +
+          '<option value="paid">পরিশোধিত ✓</option>' +
+          '<option value="pending">অপেক্ষমান</option>' +
+          '<option value="baki">বাকি আছে</option>' +
+        '</select>';
+    } else {
+      snContainer.innerHTML = '<label class="field-label" for="modal-note">নোট (ঐচ্ছিক)</label>' +
+        '<input type="text" class="field-input" id="modal-note" placeholder="মন্তব্য..." />';
+    }
+  }
+  validateSaveBtn();
+}
+
+function renderModalCatChips() {
+  const wrap = document.getElementById('cat-chips');
+  wrap.innerHTML = CATEGORIES.filter(c => c.id !== 'todo').map(c => {
+    const sel = c.id === modalCatId;
+    return '<button class="cat-chip" style="' + (sel ? 'background:' + c.bgLight + ';color:' + c.color + ';border-color:' + c.color + ';box-shadow:0 0 0 1px ' + c.color : '') + '" onclick="selectModalCat(\'' + c.id + '\')">' +
+      icon(c.icon, 14) + c.name + '</button>';
+  }).join('');
+}
+
+function selectModalCat(id) {
+  modalCatId = id;
+  renderModalCatChips();
+  updateModalUI();
+}
+
+function validateSaveBtn() {
+  const title = document.getElementById('modal-title-input').value.trim();
+  const amountEl = document.getElementById('modal-amount');
+  const amount = parseFloat(amountEl ? amountEl.value : '0') || 0;
+  const valid = title.length > 0 && (modalMode === 'todo' || amount > 0);
+  document.getElementById('save-btn').disabled = !valid;
+}
+
+document.getElementById('modal-title-input').addEventListener('input', validateSaveBtn);
+document.getElementById('modal-title-input').addEventListener('keydown', e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === 'Enter') { const btn = document.getElementById('save-btn'); if (!btn.disabled) handleSave(); }
+});
+document.getElementById('modal-amount').addEventListener('input', () => {
+  validateSaveBtn();
+  const val = parseFloat(document.getElementById('modal-amount').value) || 0;
+  const prev = document.getElementById('amount-preview');
+  if (val > 0) { prev.textContent = bnTaka(val); prev.classList.remove('hidden'); }
+  else { prev.classList.add('hidden'); }
+});
+
+function handleSave() {
+  const title = document.getElementById('modal-title-input').value.trim();
+  if (!title) return;
+
+  if (modalMode === 'todo') {
+    todos = [{ id: uid(), title, done: false, createdAt: todayISO() }].concat(todos);
+    saveTd(todos);
+  } else {
+    const amount = parseFloat(document.getElementById('modal-amount').value) || 0;
+    if (!amount) return;
+    const date = document.getElementById('modal-date').value || todayISO();
+    const cat = getCat(modalCatId);
+    const showStatus = cat.type === 'dues' || modalCatId === 'monthly' || modalCatId === 'madrasa';
+    const statusEl = document.getElementById('modal-status');
+    const noteEl = document.getElementById('modal-note');
+    const tx = {
+      id: uid(), categoryId: modalCatId, title, amount, date,
+      note: (!showStatus && noteEl && noteEl.value.trim()) || undefined,
+      status: showStatus && statusEl ? statusEl.value : undefined,
+    };
+    transactions = [tx].concat(transactions);
+    saveTx(transactions);
+    // Jump to the month of the added tx so user sees it
+    currentMonth = monthKey(date);
+    updateMonthUI();
+  }
+
+  document.getElementById('add-modal-overlay').classList.remove('open');
+  rerender();
+}
+
+// ══════════════════════════════════
+// MENU DRAWER
+// ══════════════════════════════════
+document.getElementById('menu-open-btn').addEventListener('click', () => {
+  const overlay = document.getElementById('menu-overlay');
+  const drawer = document.getElementById('menu-drawer');
+  overlay.classList.add('open');
+  drawer.classList.remove('anim-slide-left');
+  void drawer.offsetWidth;
+  drawer.classList.add('anim-slide-left');
+});
+function closeMenu(e) {
+  if (!e || e.target === document.getElementById('menu-overlay') || e.target === document.getElementById('menu-backdrop')) {
+    document.getElementById('menu-overlay').classList.remove('open');
+  }
+}
+function menuNavigate(v) {
+  document.getElementById('menu-overlay').classList.remove('open');
+  setView(v);
+}
+function handleClearAll() {
+  if (confirm('সব তথ্য মুছে ফেলতে চান? এটা পূর্বাবস্থায় ফেরানো যাবে না।')) {
+    transactions = [];
+    todos = [];
+    saveTx(transactions);
+    saveTd(todos);
+    document.getElementById('menu-overlay').classList.remove('open');
+    setView('home');
+  }
+}
+
+// ══════════════════════════════════
+// FAB
+// ══════════════════════════════════
+document.getElementById('fab-btn').addEventListener('click', () => {
+  openAddModal(openCatId || undefined);
+});
+
+// ═════════════════��════════════════
+// INIT
+// ══════════════════════════════════
+updateMonthUI();
+renderHome();
+</script>
+</body>
+</html>
