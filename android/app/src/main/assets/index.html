@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -607,11 +609,253 @@ input[type="date"] {
 input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(11,138,95,0.13); }
 .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 13px; } .mb-4 { margin-bottom: 18px; }
 
+/* ── Gemini AI, Google Drive & Calendar Styles ── */
+.sparkle-btn {
+  background: linear-gradient(135deg, #10a873, #04382b);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 14px rgba(11,138,95,0.25);
+  transition: transform .12s, box-shadow .15s;
+}
+.sparkle-btn:hover { box-shadow: 0 6px 18px rgba(11,138,95,0.35); }
+.sparkle-btn:active { transform: scale(0.92); }
+
+.ai-assistant-page, .integrations-page {
+  padding: 14px 16px 122px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-banner {
+  background: linear-gradient(145deg, #0b8a5f, #04382b);
+  color: #fff;
+  border-radius: 20px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(4,56,43,0.35);
+}
+.ai-banner-deco {
+  position: absolute; right: -25px; bottom: -25px; width: 120px; height: 120px;
+  border-radius: 50%; background: rgba(255,255,255,0.08); pointer-events: none;
+}
+.ai-banner h2 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.ai-banner p { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px; line-height: 1.5; }
+
+.ai-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.ai-action-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform .12s, border-color .15s, background .15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ai-action-card:hover {
+  border-color: var(--emerald);
+  background: #fff;
+}
+.ai-action-card:active { transform: scale(0.96); }
+.ai-action-icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ai-action-card h4 { font-size: 13px; font-weight: 700; color: var(--ink); }
+.ai-action-card p { font-size: 11px; color: var(--ink-faint); line-height: 1.35; }
+
+.ai-chat-box {
+  background: var(--card);
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 240px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.ai-msg {
+  display: flex;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.ai-msg.user { flex-direction: row-reverse; }
+.ai-msg-avatar {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+}
+.ai-msg.bot .ai-msg-avatar { background: var(--emerald-light); color: var(--emerald-mid); }
+.ai-msg.user .ai-msg-avatar { background: var(--amber-light); color: var(--amber); }
+
+.ai-msg-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.ai-msg.bot .ai-msg-bubble {
+  background: var(--paper);
+  color: var(--ink);
+  border-top-left-radius: 4px;
+}
+.ai-msg.user .ai-msg-bubble {
+  background: var(--emerald);
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+
+.ai-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 6px 6px 6px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.ai-input-row:focus-within {
+  border-color: var(--emerald);
+  box-shadow: 0 0 0 3px rgba(11,138,95,0.12);
+}
+.ai-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: var(--ink);
+  font-family: var(--font);
+}
+.ai-send-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--emerald); color: #fff;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .12s, opacity .15s;
+}
+.ai-send-btn:disabled { background: #cfcabf; cursor: not-allowed; }
+.ai-send-btn:active:not(:disabled) { transform: scale(0.92); }
+
+/* Quick AI parser in Add modal */
+.ai-quick-box {
+  background: linear-gradient(135deg, #f0fbf6, #e7f7ef);
+  border: 1px dashed var(--emerald);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.ai-quick-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; font-size: 11.5px; font-weight: 700; color: var(--emerald-deep);
+}
+.ai-quick-row { display: flex; gap: 6px; }
+.ai-quick-input {
+  flex: 1; border: 1px solid rgba(11,138,95,0.3); border-radius: 11px;
+  padding: 8px 10px; font-size: 12.5px; background: #fff; outline: none; font-family: var(--font);
+}
+.ai-quick-input:focus { border-color: var(--emerald); }
+.ai-quick-btn {
+  background: var(--emerald); color: #fff; border: none; border-radius: 11px;
+  padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.ai-quick-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Integrations items */
+.sync-card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sync-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sync-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sync-icon.drive { background: #e8f0fe; color: #1a73e8; }
+.sync-icon.calendar { background: #fef0eb; color: #d9381e; }
+.sync-icon.gemini { background: #e6f4ea; color: #137333; }
+
+.sync-info { flex: 1; min-width: 0; }
+.sync-info h3 { font-size: 15px; font-weight: 700; color: var(--ink); }
+.sync-info p { font-size: 11.5px; color: var(--ink-faint); margin-top: 2px; }
+
+.sync-badge {
+  font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 3px 9px;
+  display: flex; align-items: center; gap: 4px;
+}
+.sync-badge.connected { background: var(--emerald-light); color: var(--emerald-mid); }
+.sync-badge.disconnected { background: #f1f3f4; color: var(--ink-faint); }
+
+.sync-btn-outline {
+  width: 100%; border: 1px solid var(--line); background: var(--paper);
+  border-radius: 12px; padding: 10px; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  color: var(--ink); transition: background .15s, border-color .15s;
+}
+.sync-btn-outline:hover { background: #fff; border-color: var(--emerald); }
+.sync-btn-outline:active { transform: scale(0.98); }
+.sync-btn-primary {
+  width: 100%; border: none; background: var(--emerald); color: #fff;
+  border-radius: 12px; padding: 10px; font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .1s, opacity .15s;
+}
+.sync-btn-primary:active { transform: scale(0.98); }
+
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #10a873;
+  display: inline-block; box-shadow: 0 0 0 0 rgba(16,168,115,0.7);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16,168,115,0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16,168,115,0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16,168,115,0); }
+}
+
 @media (min-width: 640px) {
   #add-modal { border-radius: 28px; margin: 16px; width: calc(100% - 32px); }
   #add-modal-overlay { align-items: center; }
 }
 </style>
+
 </head>
 <body>
 <div class="paper-bg">
@@ -632,7 +876,9 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
             <p>স্মার্ট খরচ ট্র্যাকার</p>
           </div>
         </div>
-        <div style="width:40px"></div>
+        <button class="icon-btn sparkle-btn" id="topbar-ai-btn" onclick="setView('ai')" title="Gemini AI সহকারী" aria-label="Gemini AI সহকারী">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </button>
       </div>
       <div class="month-nav">
         <button class="month-nav-btn" id="prev-month-btn" aria-label="আগের মাস">
@@ -694,6 +940,164 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
     <!-- ══════════ REPORTS ══════════ -->
     <div id="reports-page" class="page hidden"></div>
 
+    <!-- ══════════ GEMINI AI ASSISTANT ══════════ -->
+    <div id="ai-page" class="page hidden">
+      <div class="ai-assistant-page">
+        <div class="ai-banner">
+          <div class="ai-banner-deco"></div>
+          <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+            Gemini ইন্টেলিজেন্স
+          </h2>
+          <p>আপনার খরচের ডেটা বিশ্লেষণ করে সাশ্রয়ের পরামর্শ নিন অথবা লিখে স্বয়ংক্রিয় হিসাব করুন।</p>
+        </div>
+
+        <div class="ai-action-grid">
+          <button class="ai-action-card" onclick="askAiPreset('analysis')">
+            <div class="ai-action-icon" style="background:#e8f5e9; color:#0b8a5f;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+            <h4>খরচ বিশ্লেষণ</h4>
+            <p>এই মাসের মোট হিসাব ও প্রধান খাতের বিশ্লেষণ</p>
+          </button>
+          <button class="ai-action-card" onclick="askAiPreset('savings')">
+            <div class="ai-action-icon" style="background:#fef3e2; color:#d98324;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h4>সাশ্রয়ের উপায়</h4>
+            <p>কোথায় খরচ কমানো সম্ভব তার স্মার্ট পরামর্শ</p>
+          </button>
+          <button class="ai-action-card" onclick="askAiPreset('budget')">
+            <div class="ai-action-icon" style="background:#e3f2fd; color:#0f74a8;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            </div>
+            <h4>বাজেট প্ল্যানিং</h4>
+            <p>পরবর্তী মাসের জন্য বাস্তবসম্মত বাজেট গাইড</p>
+          </button>
+          <button class="ai-action-card" onclick="askAiPreset('audit')">
+            <div class="ai-action-icon" style="background:#fce4ec; color:#d43d51;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h4>বাকি ও বিল রিভিউ</h4>
+            <p>অপরিশোধিত দোকান বাকি ও মাসিক বিলের হিসাব</p>
+          </button>
+        </div>
+
+        <div class="ai-chat-box" id="ai-chat-messages">
+          <div class="ai-msg bot">
+            <div class="ai-msg-avatar">AI</div>
+            <div class="ai-msg-bubble">আসসালামু আলাইকুম! আমি ঘরখাতার স্মার্ট AI সহকারী। আপনার খরচের বিবরণ, সাশ্রয়ের উপায় বা যেকোনো হিসাব সম্পর্কে জানতে প্রশ্ন করতে পারেন। নিচের বোতামগুলোতে চাপুন অথবা নিচে বাংলায় লিখুন।</div>
+          </div>
+        </div>
+
+        <form class="ai-input-row" id="ai-chat-form" onsubmit="handleAiChatSubmit(event)">
+          <input type="text" id="ai-chat-input" class="ai-input" placeholder="Gemini-কে প্রশ্ন করুন (যেমন: এই মাসে কত সাশ্রয় হলো?)" />
+          <button type="submit" id="ai-chat-send-btn" class="ai-send-btn" aria-label="পাঠান">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══════════ INTEGRATIONS & SYNC ══════════ -->
+    <div id="integrations-page" class="page hidden">
+      <div class="integrations-page">
+        <div class="ai-banner" style="background: linear-gradient(145deg, #155799, #159957);">
+          <div class="ai-banner-deco"></div>
+          <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            গুগল ক্লাউড সিঙ্ক
+          </h2>
+          <p>Google Drive-এ ডেটা ব্যাকআপ ও Google Calendar-এ মাসিক বিল ও বাকি টাকার রিমাইন্ডার সিঙ্ক করুন।</p>
+        </div>
+
+        <!-- Google Auth Banner -->
+        <div class="sync-card">
+          <div class="sync-card-head">
+            <div class="sync-icon drive">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2L2 19h20L12 2z"/></svg>
+            </div>
+            <div class="sync-info">
+              <h3>Google অ্যাকাউন্ট সংযোগ</h3>
+              <p id="google-auth-status-text">Google Drive ও Calendar সিঙ্ক করতে সাইন-ইন করুন</p>
+            </div>
+            <span class="sync-badge disconnected" id="google-auth-badge">সংযোগ বিচ্ছিন্ন</span>
+          </div>
+          <button class="sync-btn-primary" id="google-auth-btn" onclick="toggleGoogleAuth()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+            Google-এ সাইন-ইন করুন
+          </button>
+        </div>
+
+        <!-- Google Drive Sync -->
+        <div class="sync-card">
+          <div class="sync-card-head">
+            <div class="sync-icon drive">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <div class="sync-info">
+              <h3>Google Drive ব্যাকআপ</h3>
+              <p>সকল হিসাব সুরক্ষিত ক্লাউড ফাইলে অটো-ব্যাকআপ ও রিস্টোর</p>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="sync-btn-outline" onclick="backupToGoogleDrive()" id="drive-backup-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Drive-এ ব্যাকআপ
+            </button>
+            <button class="sync-btn-outline" onclick="restoreFromGoogleDrive()" id="drive-restore-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Drive থেকে রিস্টোর
+            </button>
+          </div>
+          <p id="drive-sync-status" style="font-size:11.5px; color:var(--ink-faint); margin-top:2px;">সর্বশেষ ব্যাকআপ: কোনো ব্যাকআপ নেই</p>
+        </div>
+
+        <!-- Google Calendar Sync -->
+        <div class="sync-card">
+          <div class="sync-card-head">
+            <div class="sync-icon calendar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="sync-info">
+              <h3>Google Calendar ইভেন্ট সিঙ্ক</h3>
+              <p>বাকি পরিশোধ ও বিলের ডেডলাইন গুগলে ক্যালেন্ডারে যুক্ত করুন</p>
+            </div>
+          </div>
+          <button class="sync-btn-outline" onclick="syncRemindersToCalendar()" id="calendar-sync-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+            সকল রিমাইন্ডার ক্যালেন্ডারে সিঙ্ক করুন
+          </button>
+          <p id="calendar-sync-status" style="font-size:11.5px; color:var(--ink-faint); margin-top:2px;">দোকান বাকি ও মাসিক বিলের পরিশোধ তারিখ ক্যালেন্ডারে পাঠায়</p>
+        </div>
+
+        <!-- Offline Export/Import Backup -->
+        <div class="sync-card">
+          <div class="sync-card-head">
+            <div class="sync-icon gemini">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="sync-info">
+              <h3>অফলাইন JSON ফাইল ব্যাকআপ</h3>
+              <p>ইন্টারনেট ছাড়াই ব্যাকআপ ফাইল ডাউনলোড ও আপলোড করুন</p>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="sync-btn-outline" onclick="exportOfflineJSON()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              ফাইল ডাউনলোড
+            </button>
+            <label class="sync-btn-outline" style="margin:0; cursor:pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              ফাইল আপলোড
+              <input type="file" id="offline-import-input" accept=".json" style="display:none" onchange="importOfflineJSON(event)" />
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ══════════ CATEGORY DETAIL ══════════ -->
     <div id="cat-detail-page" class="page hidden">
       <div id="cat-detail">
@@ -729,15 +1133,23 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
     <nav id="bottom-nav">
       <div class="bottom-nav-inner">
         <button class="nav-btn active" id="nav-home" onclick="setView('home')">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
           <span>হোম</span>
+        </button>
+        <button class="nav-btn" id="nav-reports" onclick="setView('reports')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>রিপোর্ট</span>
         </button>
         <button class="fab" id="fab-btn" aria-label="নতুন যোগ করুন">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
-        <button class="nav-btn" id="nav-reports" onclick="setView('reports')">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          <span>রিপোর্ট</span>
+        <button class="nav-btn" id="nav-ai" onclick="setView('ai')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          <span>Gemini AI</span>
+        </button>
+        <button class="nav-btn" id="nav-sync" onclick="setView('sync')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>সিঙ্ক</span>
         </button>
       </div>
     </nav>
@@ -754,6 +1166,21 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
       <button class="modal-close" onclick="closeAddModal()" aria-label="বন্ধ করুন">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
+    </div>
+
+    <!-- AI Quick Smart Parser -->
+    <div class="ai-quick-box" id="ai-quick-box">
+      <div class="ai-quick-title">
+        <span>⚡ Gemini দিয়ে দ্রুত পূরণ করুন</span>
+        <span style="font-size:10.5px; opacity:0.8;">বাংলা টেক্সট লিখুন</span>
+      </div>
+      <div class="ai-quick-row">
+        <input type="text" class="ai-quick-input" id="ai-quick-input" placeholder="যেমন: বাজারে মাছ ও তেল ১,২০০ টাকা কিনলাম" />
+        <button type="button" class="ai-quick-btn" id="ai-quick-btn" onclick="parseWithGemini()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          অটো পূরণ
+        </button>
+      </div>
     </div>
 
     <div class="mode-toggle">
@@ -830,6 +1257,18 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
         </div>
         <div><p class="menu-item-label">রিপোর্ট</p><p class="menu-item-sub">খরচ বিশ্লেষণ</p></div>
       </button>
+      <button class="menu-item" onclick="menuNavigate('ai')">
+        <div class="menu-item-icon" style="color:#0b8a5f;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+        </div>
+        <div><p class="menu-item-label">Gemini AI সহকারী</p><p class="menu-item-sub">স্মার্ট খরচ পরামর্শ ও অডিট</p></div>
+      </button>
+      <button class="menu-item" onclick="menuNavigate('sync')">
+        <div class="menu-item-icon" style="color:#1a73e8;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div><p class="menu-item-label">Google Drive ও Calendar</p><p class="menu-item-sub">ক্লাউড ব্যাকআপ ও রিমাইন্ডার</p></div>
+      </button>
       <div class="menu-divider"></div>
       <button class="menu-item danger" onclick="handleClearAll()">
         <div class="menu-item-icon">
@@ -839,7 +1278,7 @@ input[type="date"]:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px r
       </button>
     </div>
     <div class="menu-footer">
-      সব তথ্য আপনার ডিভাইসে সংরক্ষিত<br/>কোনো ডেটা আপলোড হয় না
+      Google Drive ও Gemini AI ইন্টিগ্রেটেড<br/>আপনার ব্যক্তিগত অ্যাকাউন্টের সাথে সুরক্ষিত
     </div>
   </div>
 </div>
@@ -907,7 +1346,7 @@ const CATEGORIES = [
   { id:'madrasa', name:'মাদ্রাসা খরচ',    color:'#7649c9', bgLight:'#ede6fa', icon:'gradcap', type:'expense' },
   { id:'medical', name:'ওষুধ / মেডিকেল', color:'#0f86a8', bgLight:'#def3f8', icon:'pill',    type:'expense' },
   { id:'charity', name:'দান-সদকা',       color:'#0d9276', bgLight:'#dcf2ec', icon:'heart',   type:'expense' },
-  { id:'todo',    name:'ট��ডু লিস্ট',      color:'#a8720e', bgLight:'#fdf3dd', icon:'check',   type:'todo'    },
+  { id:'todo',    name:'টুডু লিস্ট',      color:'#a8720e', bgLight:'#fdf3dd', icon:'check',   type:'todo'    },
 ];
 function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[0]; }
 
@@ -1004,13 +1443,22 @@ function setView(v) {
   openCatId = null;
   toggle('home-page', v === 'home');
   toggle('reports-page', v === 'reports');
+  toggle('ai-page', v === 'ai');
+  toggle('integrations-page', v === 'sync');
   toggle('cat-detail-page', false);
+  
   document.getElementById('nav-home').classList.toggle('active', v === 'home');
   document.getElementById('nav-reports').classList.toggle('active', v === 'reports');
+  const navAi = document.getElementById('nav-ai');
+  const navSync = document.getElementById('nav-sync');
+  if (navAi) navAi.classList.toggle('active', v === 'ai');
+  if (navSync) navSync.classList.toggle('active', v === 'sync');
+
   document.getElementById('topbar').classList.remove('hidden');
   window.scrollTo({ top: 0 });
   if (v === 'home') renderHome();
   if (v === 'reports') renderReports();
+  if (v === 'sync') updateGoogleAuthUI();
 }
 function toggle(id, show) {
   const el = document.getElementById(id);
@@ -1619,11 +2067,512 @@ document.getElementById('fab-btn').addEventListener('click', () => {
   openAddModal(openCatId || undefined);
 });
 
-// ═════════════════��════════════════
+// ══════════════════════════════════
+// GEMINI INTELLIGENCE & AI ASSISTANT
+// ══════════════════════════════════
+let aiChatHistory = [];
+
+async function callGemini(prompt, systemInstruction) {
+  const payload = {
+    prompt,
+    systemInstruction,
+    transactions,
+    todos,
+    currentMonth,
+  };
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || 'Gemini সার্ভার সাড়া দিচ্ছে না');
+  }
+  const data = await res.json();
+  return data.text;
+}
+
+function appendAiMessage(role, text) {
+  const container = document.getElementById('ai-chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'ai-msg-avatar';
+  avatar.textContent = role === 'user' ? 'আপনি' : 'AI';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-msg-bubble';
+  // simple markdown/paragraph formatter
+  let formatted = esc(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '<br/><br/>')
+    .replace(/\n/g, '<br/>');
+  bubble.innerHTML = formatted;
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function handleAiChatSubmit(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('ai-chat-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  input.value = '';
+  appendAiMessage('user', q);
+
+  const container = document.getElementById('ai-chat-messages');
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'ai-msg bot';
+  loadingDiv.id = 'ai-loading-indicator';
+  loadingDiv.innerHTML = '<div class="ai-msg-avatar">AI</div><div class="ai-msg-bubble"><span class="pulse-dot"></span> চিন্তা করছে...</div>';
+  container.appendChild(loadingDiv);
+  container.scrollTop = container.scrollHeight;
+
+  const btn = document.getElementById('ai-chat-send-btn');
+  btn.disabled = true;
+
+  try {
+    const answer = await callGemini(q);
+    const loader = document.getElementById('ai-loading-indicator');
+    if (loader) loader.remove();
+    appendAiMessage('bot', answer);
+  } catch (err) {
+    const loader = document.getElementById('ai-loading-indicator');
+    if (loader) loader.remove();
+    appendAiMessage('bot', 'দুঃখিত, কোনো সমস্যা হয়েছে: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function askAiPreset(type) {
+  let prompt = '';
+  if (type === 'analysis') {
+    prompt = 'আমার এই চলতি মাসের (' + monthLabel(currentMonth) + ') সকল আয় ও ব্যয়ের পূর্ণাঙ্গ বিশ্লেষণ দাও। কোন খাতে বেশি খরচ হয়েছে এবং সার্বিক অবস্থা কেমন?';
+  } else if (type === 'savings') {
+    prompt = 'আমার খরচের প্যাটার্ন দেখে আগামী মাসে কোথায় কোথায় খরচ কমিয়ে টাকা সাশ্রয় বা সঞ্চয় বাড়ানো যায় তার ৪টি বাস্তবসম্মত পরামর্শ দাও।';
+  } else if (type === 'budget') {
+    prompt = 'আমার বর্তমান আয়ের উপর ভিত্তি করে পরবর্তী মাসের জন্য ৫০/৩০/২০ নিয়মে একটি ভারসাম্যপূর্ণ বাজেট পরিকল্পনা সাজিয়ে দাও।';
+  } else if (type === 'audit') {
+    prompt = 'আমার সব অপরিশোধিত দোকান বাকি (Dues) এবং মাসিক বিলগুলো আলাদা করে রিভিউ করো এবং মোট কত টাকা বাকি আছে তা জানাও।';
+  }
+  document.getElementById('ai-chat-input').value = prompt;
+  handleAiChatSubmit();
+}
+
+async function parseWithGemini() {
+  const input = document.getElementById('ai-quick-input');
+  const text = input.value.trim();
+  if (!text) {
+    alert('অনুগ্রহ করে খরচের বিবরণ লিখুন (যেমন: ১০০০ টাকায় কাঁচাবাজার)');
+    return;
+  }
+
+  const btn = document.getElementById('ai-quick-btn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="pulse-dot"></span> পার্স হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `ব্যবহারকারী এই টেক্সটে খরচ বা আয়ের তথ্য দিয়েছে: "${text}"\nঅনুগ্রহ করে এটি পার্স করে নিচের ফিল্ডগুলো বের করুন:\n1. title (ছোট স্পষ্ট বিবরণ)\n2. amount (সংখ্যা)\n3. categoryId (income, bazar, dues, monthly, education, medicine, sadakah, entertainment, loan, or others)\n4. date (YYYY-MM-DD ফরম্যাট, উল্লেখ না থাকলে "${todayISO()}")\n5. note (ঐচ্ছিক নোট)`,
+        parseMode: true,
+      }),
+    });
+    if (!res.ok) throw new Error('AI অটো পার্স সম্পন্ন হয়নি');
+    const data = await res.json();
+    
+    // Fill into form fields
+    if (data.title) document.getElementById('modal-title-input').value = data.title;
+    if (data.amount) {
+      document.getElementById('modal-amount').value = data.amount;
+      const prev = document.getElementById('amount-preview');
+      prev.textContent = bnTaka(data.amount);
+      prev.classList.remove('hidden');
+    }
+    if (data.date) document.getElementById('modal-date').value = data.date;
+    if (data.categoryId) {
+      modalCatId = data.categoryId;
+      renderCatChips();
+    }
+    if (data.note) {
+      const noteEl = document.getElementById('modal-note');
+      if (noteEl) noteEl.value = data.note;
+    }
+    validateSaveBtn();
+    input.value = '';
+  } catch (err) {
+    alert('স্বয়ংক্রিয় পার্স ব্যর্থ হয়েছে: ' + err.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════
+// GOOGLE OAUTH & CLOUD INTEGRATION
+// ══════════════════════════════════
+let googleTokenClient = null;
+let googleAccessToken = null;
+let googleUserEmail = null;
+
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
+
+async function initGoogleOAuth() {
+  try {
+    const res = await fetch('/api/oauth-client-id');
+    const data = await res.json();
+    if (!data.clientId) {
+      console.warn('Google Client ID পাওয়া যায়নি');
+      return;
+    }
+
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+      googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: data.clientId,
+        scope: GOOGLE_SCOPES,
+        callback: async (tokenResp) => {
+          if (tokenResp.error) {
+            console.error('Google Auth Error:', tokenResp);
+            alert('গুগল সাইন-ইন ব্যর্থ হয়েছে: ' + tokenResp.error);
+            return;
+          }
+          googleAccessToken = tokenResp.access_token;
+          sessionStorage.setItem('ghorkhata_google_token', googleAccessToken);
+          
+          // Fetch user info
+          try {
+            const ures = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+              headers: { Authorization: 'Bearer ' + googleAccessToken },
+            });
+            if (ures.ok) {
+              const udata = await ures.json();
+              googleUserEmail = udata.email;
+              sessionStorage.setItem('ghorkhata_user_email', googleUserEmail);
+            }
+          } catch(e) {
+            console.warn('Userinfo error:', e);
+          }
+
+          updateGoogleAuthUI();
+          alert('Google অ্যাকাউন্ট সফলভাবে যুক্ত হয়েছে! এখন আপনি Drive ব্যাকআপ ও Calendar সিঙ্ক করতে পারেন।');
+        },
+      });
+    }
+  } catch (e) {
+    console.warn('Google OAuth Init error:', e);
+  }
+}
+
+function updateGoogleAuthUI() {
+  const savedToken = sessionStorage.getItem('ghorkhata_google_token');
+  if (savedToken && !googleAccessToken) {
+    googleAccessToken = savedToken;
+    googleUserEmail = sessionStorage.getItem('ghorkhata_user_email');
+  }
+
+  const badge = document.getElementById('google-auth-badge');
+  const btn = document.getElementById('google-auth-btn');
+  const statusText = document.getElementById('google-auth-status-text');
+  const lastSync = localStorage.getItem('ghorkhata:last_drive_sync');
+
+  if (googleAccessToken) {
+    if (badge) {
+      badge.textContent = 'সংযুক্ত';
+      badge.className = 'sync-badge connected';
+    }
+    if (statusText) {
+      statusText.textContent = 'সংযুক্ত অ্যাকাউন্ট: ' + (googleUserEmail || 'Google User');
+    }
+    if (btn) {
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> সাইন-আউট করুন';
+      btn.style.background = '#d43d51';
+    }
+  } else {
+    if (badge) {
+      badge.textContent = 'সংযোগ বিচ্ছিন্ন';
+      badge.className = 'sync-badge disconnected';
+    }
+    if (statusText) {
+      statusText.textContent = 'Google Drive ও Calendar সিঙ্ক করতে সাইন-ইন করুন';
+    }
+    if (btn) {
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Google-এ সাইন-ইন করুন';
+      btn.style.background = '#0b8a5f';
+    }
+  }
+
+  const driveStatus = document.getElementById('drive-sync-status');
+  if (driveStatus && lastSync) {
+    driveStatus.textContent = 'সর্বশেষ Drive ব্যাকআপ: ' + lastSync;
+  }
+}
+
+function toggleGoogleAuth() {
+  if (googleAccessToken) {
+    if (confirm('Google অ্যাকাউন্ট থেকে সাইন-আউট করতে চান?')) {
+      if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        window.google.accounts.oauth2.revoke(googleAccessToken, () => {});
+      }
+      googleAccessToken = null;
+      googleUserEmail = null;
+      sessionStorage.removeItem('ghorkhata_google_token');
+      sessionStorage.removeItem('ghorkhata_user_email');
+      updateGoogleAuthUI();
+    }
+    return;
+  }
+
+  if (googleTokenClient) {
+    googleTokenClient.requestAccessToken({ prompt: 'consent' });
+  } else {
+    initGoogleOAuth().then(() => {
+      if (googleTokenClient) googleTokenClient.requestAccessToken({ prompt: 'consent' });
+      else alert('Google Auth লোড হচ্ছে, অনুগ্রহ করে কয়েক সেকেন্ড পরে আবার চেষ্টা করুন।');
+    });
+  }
+}
+
+// ══════════════════════════════════
+// GOOGLE DRIVE BACKUP & RESTORE
+// ══════════════════════════════════
+async function backupToGoogleDrive() {
+  if (!googleAccessToken) {
+    alert('প্রথমে Google অ্যাকাউন্টে সাইন-ইন করুন');
+    toggleGoogleAuth();
+    return;
+  }
+
+  const btn = document.getElementById('drive-backup-btn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="pulse-dot"></span> ব্যাকআপ হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    const backupData = {
+      app: 'ghorkhata',
+      version: '3.0',
+      exportedAt: new Date().toISOString(),
+      transactions,
+      todos,
+    };
+
+    const res = await fetch('/api/drive', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + googleAccessToken,
+      },
+      body: JSON.stringify({
+        action: 'backup',
+        data: backupData,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Drive ব্যাকআপ ব্যর্থ হয়েছে');
+    }
+
+    const timeStr = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', hour12: true }) + ', ' + formatBnDate(todayISO());
+    localStorage.setItem('ghorkhata:last_drive_sync', timeStr);
+    updateGoogleAuthUI();
+    alert('🎉 সফলভাবে Google Drive-এ "ghorkhata_backup.json" ফাইলে ব্যাকআপ সংরক্ষিত হয়েছে!');
+  } catch (e) {
+    alert('ব্যাকআপ সমস্যা: ' + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+async function restoreFromGoogleDrive() {
+  if (!googleAccessToken) {
+    alert('প্রথমে Google অ্যাকাউন্টে সাইন-ইন করুন');
+    toggleGoogleAuth();
+    return;
+  }
+
+  if (!confirm('Google Drive থেকে ডেটা রিস্টোর করলে বর্তমান ডেটা প্রতিস্থাপিত হবে। আপনি কি নিশ্চিত?')) {
+    return;
+  }
+
+  const btn = document.getElementById('drive-restore-btn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="pulse-dot"></span> রিস্টোর হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/drive', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + googleAccessToken,
+      },
+      body: JSON.stringify({ action: 'restore' }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Drive রিস্টোর ব্যর্থ হয়েছে');
+    }
+
+    const json = await res.json();
+    if (!json.data || !json.data.transactions) {
+      throw new Error('Google Drive-এ কোনো সঠিক ব্যাকআপ ফাইল পাওয়া যায়নি');
+    }
+
+    transactions = json.data.transactions || [];
+    todos = json.data.todos || [];
+    saveTx(transactions);
+    saveTd(todos);
+
+    alert(`🎉 সফলভাবে ${bn(transactions.length)}টি লেনদেন ও ${bn(todos.length)}টি টাস্ক রিস্টোর করা হয়েছে!`);
+    rerender();
+    setView('home');
+  } catch (e) {
+    alert('রিস্টোর সমস্যা: ' + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════
+// GOOGLE CALENDAR REMINDER SYNC
+// ══════════════════════════════════
+async function syncRemindersToCalendar() {
+  if (!googleAccessToken) {
+    alert('প্রথমে Google অ্যাকাউন্টে সাইন-ইন করুন');
+    toggleGoogleAuth();
+    return;
+  }
+
+  // Filter dues and monthly bills that need reminder
+  const duesAndBills = transactions.filter(t => 
+    (t.categoryId === 'dues' || t.categoryId === 'monthly' || t.categoryId === 'madrasa') &&
+    t.status !== 'পরিশোধিত'
+  );
+
+  const pendingTodos = todos.filter(t => !t.done);
+
+  if (duesAndBills.length === 0 && pendingTodos.length === 0) {
+    alert('ক্যালেন্ডারে সিঙ্ক করার মতো কোনো অপরিশোধিত বিল বা টাস্ক নেই!');
+    return;
+  }
+
+  const btn = document.getElementById('calendar-sync-btn');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="pulse-dot"></span> সিঙ্ক হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/calendar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + googleAccessToken,
+      },
+      body: JSON.stringify({
+        transactions: duesAndBills,
+        todos: pendingTodos,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Calendar সিঙ্ক ব্যর্থ হয়েছে');
+    }
+
+    const data = await res.json();
+    const calStatus = document.getElementById('calendar-sync-status');
+    if (calStatus) {
+      calStatus.textContent = `সর্বশেষ সিঙ্ক: ${bn(data.syncedCount || 0)}টি ইভেন্ট ক্যালেন্ডারে যুক্ত করা হয়েছে`;
+    }
+    alert(`🎉 সফলভাবে ${bn(data.syncedCount || 0)}টি রিমাইন্ডার Google Calendar-এ যোগ করা হয়েছে!`);
+  } catch (e) {
+    alert('Calendar সিঙ্ক সমস্যা: ' + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════
+// OFFLINE BACKUP & RESTORE (JSON)
+// ══════════════════════════════════
+function exportOfflineJSON() {
+  const data = {
+    app: 'ghorkhata',
+    version: '3.0',
+    exportDate: todayISO(),
+    transactions,
+    todos,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ghorkhata_backup_${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importOfflineJSON(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!parsed.transactions || !Array.isArray(parsed.transactions)) {
+        throw new Error('ফাইলের ফরম্যাট সঠিক নয়');
+      }
+      if (confirm(`ফাইলে ${bn(parsed.transactions.length)}টি লেনদেন পাওয়া গেছে। আপনি কি এটি ইম্পোর্ট করতে চান?`)) {
+        transactions = parsed.transactions;
+        todos = parsed.todos || [];
+        saveTx(transactions);
+        saveTd(todos);
+        alert('সফলভাবে ডেটা ইম্পোর্ট করা হয়েছে!');
+        rerender();
+        setView('home');
+      }
+    } catch (err) {
+      alert('ফাইল পড়তে সমস্যা হয়েছে: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ══════════════════════════════════
 // INIT
 // ══════════════════════════════════
 updateMonthUI();
 renderHome();
+// GIS is loaded asynchronously; retry briefly so the sign-in button works even
+// when the CDN finishes after the page script.
+(function waitForGoogleIdentity(attempts = 0) {
+  updateGoogleAuthUI();
+  if (window.google?.accounts?.oauth2) {
+    initGoogleOAuth();
+  } else if (attempts < 20) {
+    setTimeout(() => waitForGoogleIdentity(attempts + 1), 250);
+  } else {
+    console.warn('Google Identity Services could not be loaded');
+  }
+})();
 </script>
 </body>
 </html>
