@@ -1,0 +1,8 @@
+{
+  "name": "Ghorkhata",
+  "description": "ঘরখাতা — স্মার্ট খরচ ট্র্যাকার (Smart Household & Personal Expense Tracker)",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
