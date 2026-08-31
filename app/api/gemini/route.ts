@@ -3,21 +3,29 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const customKey = req.headers.get("x-gemini-api-key");
+    const apiKey = customKey || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY সেট করা নেই। দয়া করে সেটিংসে API কী প্রদান করুন।" },
-        { status: 500 }
+        { error: "GEMINI_API_KEY পাওয়া যায়নি। অ্যাপের সেটিংসে আপনার নিজস্ব Gemini API কী দিন অথবা এনভায়রনমেন্ট ভ্যারিয়েবলে যোগ করুন।" },
+        { status: 400 }
       );
     }
 
     const { prompt, systemInstruction: customSystem, transactions, todos, currentMonth, parseMode } = await req.json();
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
 
     if (parseMode) {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.7-flash",
         contents: prompt,
         config: {
           systemInstruction: `তুমি একটি স্মার্ট ফাইন্যান্স টেক্সট পার্সার। ব্যবহারকারীর স্বাভাবিক বাংলা/ইংরেজি বাক্য থেকে খরচ, আয় বা লেনদেনের বিবরণ পার্স করে শুধুমাত্র একটি বৈধ JSON অবজেক্ট আউটপুট দাও (কোনো markdown বা code block ছাড়া)।
@@ -67,7 +75,7 @@ ${todos && todos.length > 0 ? `\n- টাস্ক বা বাকি কাজ
     const fullPrompt = prompt + txSummary;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.7-flash",
       contents: fullPrompt,
       config: {
         systemInstruction: customSystem || defaultSystemInstruction,

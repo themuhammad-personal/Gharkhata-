@@ -1,51 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files";
-
-function token(req: NextRequest) {
-  const value = req.headers.get("authorization") || "";
-  return value.startsWith("Bearer ") ? value.slice(7) : "";
-}
-
-async function drive(req: NextRequest, url: string, init: RequestInit = {}) {
-  const accessToken = token(req);
-  if (!accessToken) throw new Error("Google সাইন-ইন টোকেন পাওয়া যায়নি");
-  const response = await fetch(url, {
-    ...init,
-    headers: { Authorization: `Bearer ${accessToken}`, ...(init.headers || {}) },
-  });
-  if (!response.ok) throw new Error((await response.text()) || "Google Drive অনুরোধ ব্যর্থ হয়েছে");
-  return response;
-}
-
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Google অ্যাক্সেস টোকেন পাওয়া যায়নি" }, { status: 401 });
+    }
+    const token = authHeader.split(" ")[1];
     const { action, data } = await req.json();
-    const q = encodeURIComponent("name = 'ghorkhata_backup.json' and trashed = false");
-    const found = await drive(req, `${DRIVE_FILES_URL}?q=${q}&fields=files(id,name,modifiedTime)&pageSize=1`);
-    const files = (await found.json()).files || [];
+
     if (action === "backup") {
-      const body = JSON.stringify(data);
-      let fileId = files[0]?.id;
-      if (!fileId) {
-        const created = await drive(req, DRIVE_FILES_URL, {
-          method: "POST", body: JSON.stringify({ name: "ghorkhata_backup.json", mimeType: "application/json" }),
-          headers: { "Content-Type": "application/json" },
-        });
-        fileId = (await created.json()).id;
+      // 1. Search for existing ghorkhata_backup.json
+      const searchRes = await fetch(
+        "https://www.googleapis.com/drive/v3/files?q=name%3D'ghorkhata_backup.json'+and+trashed%3Dfalse&fields=files(id,name)",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const searchData = await searchRes.json();
+      const existingFile = searchData.files && searchData.files[0];
+
+      const fileContent = JSON.stringify(data, null, 2);
+      let driveRes;
+
+      if (existingFile) {
+        // Update existing file
+        driveRes = await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: fileContent,
+          }
+        );
+      } else {
+        // Create new file with multipart upload
+        const metadata = {
+          name: "ghorkhata_backup.json",
+          mimeType: "application/json",
+          description: "Ghorkhata Cloud Backup File",
+        };
+        const boundary = "-------ghorkhata_drive_boundary";
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const closeDelimiter = "\r\n--" + boundary + "--";
+
+        const multipartBody =
+          delimiter +
+          "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+          JSON.stringify(metadata) +
+          delimiter +
+          "Content-Type: application/json\r\n\r\n" +
+          fileContent +
+          closeDelimiter;
+
+        driveRes = await fetch(
+          "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": `multipart/related; boundary=${boundary}`,
+            },
+            body: multipartBody,
+          }
+        );
       }
-      await drive(req, `${DRIVE_FILES_URL}/${fileId}?uploadType=media`, {
-        method: "PATCH", body, headers: { "Content-Type": "application/json" },
-      });
-      return NextResponse.json({ ok: true });
+
+      if (!driveRes.ok) {
+        const errJson = await driveRes.json().catch(() => ({}));
+        throw new Error(errJson.error?.message || "Google Drive ফাইলে ব্যাকআপ সংরক্ষণ ব্যর্থ হয়েছে");
+      }
+
+      return NextResponse.json({ success: true });
+    } else if (action === "restore") {
+      // Find backup file
+      const searchRes = await fetch(
+        "https://www.googleapis.com/drive/v3/files?q=name%3D'ghorkhata_backup.json'+and+trashed%3Dfalse&fields=files(id,name)&orderBy=modifiedTime+desc",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const searchData = await searchRes.json();
+      const existingFile = searchData.files && searchData.files[0];
+
+      if (!existingFile) {
+        return NextResponse.json({ error: "Google Drive-এ কোনো ghorkhata_backup.json ফাইল পাওয়া যায়নি" }, { status: 404 });
+      }
+
+      const fileRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${existingFile.id}?alt=media`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!fileRes.ok) {
+        throw new Error("Google Drive থেকে ব্যাকআপ ফাইল ডাউনলোড করা যায়নি");
+      }
+
+      const backupData = await fileRes.json();
+      return NextResponse.json({ success: true, data: backupData });
     }
-    if (action === "restore") {
-      if (!files[0]) return NextResponse.json({ error: "কোনো ব্যাকআপ পাওয়া যায়নি" }, { status: 404 });
-      const result = await drive(req, `${DRIVE_FILES_URL}/${files[0].id}?alt=media`);
-      return NextResponse.json({ data: await result.json() });
-    }
-    return NextResponse.json({ error: "অজানা Drive action" }, { status: 400 });
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Google Drive অনুরোধ ব্যর্থ হয়েছে" }, { status: 500 });
+    console.error("Drive API Error:", error);
+    return NextResponse.json({ error: error.message || "Drive প্রসেসিং ব্যর্থ হয়েছে" }, { status: 500 });
   }
 }
