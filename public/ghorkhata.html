@@ -2561,10 +2561,18 @@ function importOfflineJSON(e) {
 // ══════════════════════════════════
 updateMonthUI();
 renderHome();
-setTimeout(() => {
-  initGoogleOAuth();
+// GIS is loaded asynchronously; retry briefly so the sign-in button works even
+// when the CDN finishes after the page script.
+(function waitForGoogleIdentity(attempts = 0) {
   updateGoogleAuthUI();
-}, 500);
+  if (window.google?.accounts?.oauth2) {
+    initGoogleOAuth();
+  } else if (attempts < 20) {
+    setTimeout(() => waitForGoogleIdentity(attempts + 1), 250);
+  } else {
+    console.warn('Google Identity Services could not be loaded');
+  }
+})();
 </script>
 </body>
 </html>
